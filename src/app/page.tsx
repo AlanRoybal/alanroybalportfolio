@@ -3,6 +3,7 @@ import { About } from "@/components/sections/About";
 import { Experience } from "@/components/sections/Experience";
 import { ProjectsHorizontal } from "@/components/sections/ProjectsHorizontal";
 import { Contact } from "@/components/sections/Contact";
+import { ScrollCharm } from "@/components/effects/ScrollCharm";
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
       <Experience />
       <ProjectsHorizontal />
       <Contact />
+      <ScrollCharm />
     </>
   );
 }

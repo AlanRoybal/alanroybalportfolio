@@ -51,10 +51,11 @@ export function Contact() {
           </div>
         </div>
 
-        {/* giant wordmark */}
+        {/* giant wordmark — the charm's landing target (see ScrollCharm) */}
         <p
           aria-hidden="true"
-          className="mt-24 font-display text-[length:clamp(3rem,17vw,15rem)] font-light lowercase leading-[0.85] tracking-[var(--tracking-tightest)] text-text-strong"
+          data-charm-target
+          className="mt-24 font-display text-[length:clamp(3rem,17vw,15rem)] font-light lowercase leading-[0.85] tracking-[var(--tracking-tightest)] text-text-strong [will-change:transform]"
         >
           <ScrambleText text="alan roybal" trigger="view" durationMs={900} />
           <span className="text-glow">.</span>
@@ -65,6 +66,8 @@ export function Contact() {
           <span>Dallas, TX · open to new-grad roles</span>
         </div>
       </div>
+      {/* scroll runway so the charm can land on the wordmark and settle (ScrollCharm) */}
+      <div aria-hidden="true" className="h-[42vh]" />
     </footer>
   );
 }
