@@ -1,15 +1,18 @@
 import { profile } from "@/content";
 import { ScrambleText } from "@/components/effects/ScrambleText";
 import { CharmWordmark } from "@/components/effects/CharmWordmark";
+import { DitherSkyline } from "@/components/effects/DitherSkyline";
 
 export function Contact() {
   return (
     <footer
       id="contact"
       data-snap
-      className="relative w-full scroll-mt-16 bg-surface-0 pb-16 pt-[var(--space-section)]"
+      className="relative w-full overflow-hidden scroll-mt-16 bg-surface-0 pb-16 pt-[var(--space-section)]"
     >
-      <div className="mx-auto w-full max-w-[var(--container-content)] px-[var(--space-gutter)]">
+      {/* dithered dot-art skyline closing the page */}
+      <DitherSkyline className="pointer-events-none absolute inset-x-0 bottom-0 h-[clamp(150px,24vh,300px)] w-full [mask-image:linear-gradient(to_top,#000_55%,transparent)]" />
+      <div className="relative z-10 mx-auto w-full max-w-[var(--container-content)] px-[var(--space-gutter)]">
         <div data-reveal className="border-t border-line pt-14">
           <span className="label text-text-faint">04 / contact</span>
           <h2 className="mt-4 max-w-[18ch] font-display text-[length:var(--text-3xl)] font-light lowercase leading-[1.02] tracking-tight text-text-strong [&_em]:italic [&_em]:text-glow">

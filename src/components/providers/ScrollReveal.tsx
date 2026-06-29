@@ -28,14 +28,28 @@ export function ScrollReveal() {
         });
       }
 
-      // Everything else: rise + fade as it enters the frame.
+      // Everything else: a clip-wipe + rise so each block "falls into place" as
+      // it enters the frame — content settles upward out of a soft mask.
       gsap.utils.toArray<HTMLElement>("[data-reveal]").forEach((el) => {
         gsap.from(el, {
           autoAlpha: 0,
-          y: 30,
-          duration: 0.9,
+          y: 38,
+          clipPath: "inset(0% 0% 100% 0%)",
+          duration: 1.05,
+          ease: "power4.out",
+          scrollTrigger: { trigger: el, start: "top 88%", once: true },
+        });
+      });
+
+      // Direct children of [data-reveal-stagger] cascade in one after another.
+      gsap.utils.toArray<HTMLElement>("[data-reveal-stagger]").forEach((group) => {
+        gsap.from(group.children, {
+          autoAlpha: 0,
+          y: 28,
+          duration: 0.8,
           ease: "power3.out",
-          scrollTrigger: { trigger: el, start: "top 86%", once: true },
+          stagger: 0.08,
+          scrollTrigger: { trigger: group, start: "top 84%", once: true },
         });
       });
 
