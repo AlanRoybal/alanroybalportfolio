@@ -5,7 +5,7 @@ import sharp from "sharp";
 import { readdirSync, writeFileSync } from "fs";
 
 const DIR = process.argv[2];
-const COLS = 50;
+const COLS = 56;
 const RAMP = "@%#*+=~:-."; // dense -> faint
 const files = readdirSync(DIR).filter((f) => f.endsWith(".png")).sort();
 
