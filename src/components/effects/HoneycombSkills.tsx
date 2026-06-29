@@ -3,9 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import {
   siClaude,
+  siPerplexity,
   siPython,
   siTypescript,
   siRust,
+  siGo,
   siSwift,
   siCplusplus,
   siZig,
@@ -36,9 +38,13 @@ type Tile = { name: string; icon?: SimpleIcon; mono?: string };
 
 const TILES: Tile[] = [
   { name: "Claude", icon: siClaude },
+  { name: "Codex", mono: "Cx" },
+  { name: "Devin", mono: "Dv" },
+  { name: "Perplexity", icon: siPerplexity },
   { name: "Python", icon: siPython },
   { name: "TypeScript", icon: siTypescript },
   { name: "Rust", icon: siRust },
+  { name: "Go", icon: siGo },
   { name: "Swift", icon: siSwift },
   { name: "C++", icon: siCplusplus },
   { name: "C#", mono: "C#" },
