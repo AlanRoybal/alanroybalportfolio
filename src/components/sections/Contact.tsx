@@ -64,8 +64,8 @@ export function Contact() {
           <span>Dallas, TX · open to new-grad roles</span>
         </div>
       </div>
-      {/* scroll runway so the charm can land on the wordmark and settle (ScrollCharm) */}
-      <div aria-hidden="true" className="h-[42vh]" />
+      {/* small scroll runway so the charm can land on the wordmark and settle (ScrollCharm) */}
+      <div aria-hidden="true" className="h-[14vh]" />
     </footer>
   );
 }

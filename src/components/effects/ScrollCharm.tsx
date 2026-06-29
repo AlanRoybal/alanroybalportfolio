@@ -28,6 +28,8 @@ import { setCharmImpact } from "@/lib/charmImpact";
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const smooth = (t: number) => t * t * (3 - 2 * t);
 const FRAME_MS = 46; // ~the clip's native frame rate
+const SWEEPS = 4.5; // zigzag sweeps across the journey (ends off the right edge)
+const OFF = 0.62; // x amplitude in vw — large enough to carry the charm fully off-screen
 
 export function ScrollCharm() {
   const charmRef = useRef<HTMLPreElement>(null);
@@ -95,7 +97,7 @@ export function ScrollCharm() {
         hitX = vw * 0.3;
         hitDocY = total + vh * 0.5;
       }
-      impactScroll = clamp(hitDocY - vh * 0.58, projBottom + 1, total - vh * 0.2);
+      impactScroll = clamp(hitDocY - vh * 0.72, projBottom + 1, total - vh * 0.14);
       render();
     };
 
@@ -107,25 +109,22 @@ export function ScrollCharm() {
       let scale = 1;
       let opacity = 1;
 
-      if (s < projTop) {
-        const a = clamp(s / Math.max(1, projTop), 0, 1);
-        x = vw * (0.5 + 0.33 * Math.sin(a * Math.PI * 3));
-        y = vh * (0.16 + 0.62 * a) + Math.sin(a * Math.PI * 6) * vh * 0.03;
-        rot = Math.cos(a * Math.PI * 3) * 8;
+      if (s < projBottom) {
+        // one continuous zigzag down the page; each sweep carries the charm fully
+        // off-screen and back. Ends off the right edge (sin(SWEEPS*pi) = 1).
+        const g = clamp(s / Math.max(1, projBottom), 0, 1);
+        x = vw * 0.5 + vw * OFF * Math.sin(g * Math.PI * SWEEPS);
+        y = vh * (0.16 + 0.66 * g);
+        rot = Math.cos(g * Math.PI * SWEEPS) * 8;
         opacity = smooth(clamp(s / (vh * 0.35), 0, 1));
-      } else if (s < projBottom) {
-        const b = clamp((s - projTop) / Math.max(1, projBottom - projTop), 0, 1);
-        x = vw * (0.1 + 0.8 * b);
-        y = vh * (0.8 + 0.05 * Math.sin(b * Math.PI * 4));
-        rot = 5;
       } else {
-        // home into the wordmark at a SHALLOW angle: settle to its height early,
-        // then travel mostly horizontally into it.
+        // re-enter from the right and home into the wordmark at a SHALLOW angle:
+        // settle to its height early, then travel horizontally into it.
         const c = smooth(clamp((s - projBottom) / Math.max(1, impactScroll - projBottom), 0, 1));
-        const startX = vw * 0.9; // continuous with the projects phase end
-        const startY = vh * 0.8;
+        const startX = vw * (0.5 + OFF); // continuous with the journey's end (off right)
+        const startY = vh * 0.82;
         const ty = hitDocY - impactScroll; // wordmark viewport y at impact
-        const cy = smooth(clamp(c / 0.55, 0, 1)); // reach target height by ~55%
+        const cy = smooth(clamp(c / 0.5, 0, 1)); // reach target height by ~50%
         x = startX + (hitX - startX) * c;
         y = startY + (ty - startY) * cy;
         rot = (1 - c) * 3;
@@ -146,7 +145,7 @@ export function ScrollCharm() {
       setCharmImpact(resolve);
 
       // impact envelope (jolt), centred on contact
-      const half = vh * 0.16;
+      const half = vh * 0.12;
       const k = clamp((s - (impactScroll - half)) / (2 * half), 0, 1);
       const pulse = Math.sin(k * Math.PI);
       if (s >= projBottom) {
