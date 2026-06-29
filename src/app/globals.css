@@ -1,26 +1,303 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================================
+   THEME — fixed tokens (generate utilities)
+   "Ink & Signal": a warm-neutral ink base, one amber accent,
+   an editorial serif + grotesque + mono type system. No imagery —
+   the only graphics on the site are generated in code.
+   ============================================================ */
+@theme {
+  /* fonts (wired to next/font in layout.tsx) */
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-hanken), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  /* neutral ink ramp (warm-tinted) */
+  --color-ink-50: #f5f1e8;
+  --color-ink-100: #e7e3da;
+  --color-ink-200: #c4bfb3;
+  --color-ink-300: #a7a294;
+  --color-ink-400: #84807499;
+  --color-ink-500: #6f6c63;
+  --color-ink-600: #4a4d51;
+  --color-ink-700: #2f3338;
+  --color-ink-800: #1c2024;
+  --color-ink-900: #111316;
+  --color-ink-950: #0c0d0f;
+
+  /* single accent — warm amber/gold */
+  --color-accent: #e9a23b;
+  --color-accent-hi: #f4b860;
+  --color-accent-lo: #b97d22;
+  --color-on-accent: #1a1206;
+  /* legacy alias so emphasis type shares the one accent hue */
+  --color-glow: #e9a23b;
+
+  /* type scale */
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.1875rem;
+  --text-lg: 1.5rem;
+  --text-xl: 2.0625rem;
+  --text-2xl: 2.75rem;
+  --text-3xl: 3.5625rem;
+  --text-4xl: 4.75rem;
+  --text-5xl: 6.5rem;
+  --text-6xl: 8.5rem;
+
+  --leading-none: 1;
+  --leading-tight: 1.07;
+  --leading-snug: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  --tracking-tightest: -0.03em;
+  --tracking-tight: -0.015em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+  --tracking-label: 0.18em;
+
+  /* spacing + containers */
+  --spacing: 0.25rem;
+  --container-prose: 42rem;
+  --container-narrow: 52rem;
+  --container-content: 75rem;
+  --container-wide: 90rem;
+  --container-frame: 96rem;
+
+  /* radii — precise */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* easings */
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-detent: cubic-bezier(0.34, 1.56, 0.5, 1);
+  --ease-advance: cubic-bezier(0.83, 0, 0.17, 1);
+  --ease-aperture: cubic-bezier(0.4, 0, 0.1, 1);
+  --ease-focus: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* semantic roles — switch with theme */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-text: var(--text);
+  --color-text-strong: var(--text-strong);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-line-faint: var(--line-faint);
+  --color-ring: var(--ring);
+  --color-positive: var(--positive);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ============================================================
+   PRIMARY — ink (default, dark)
+   ============================================================ */
+:root {
+  --bg: #0c0d0f;
+  --surface-0: #111316;
+  --surface-1: #15181c;
+  --surface-2: #1c2024;
+  --surface-3: #23282d;
+  --surface-sunken: #08090a;
+  --text: #e7e3da;
+  --text-strong: #f5f1e8;
+  --text-muted: #a7a294;
+  --text-faint: #6f6c63;
+  --line: #262a2e;
+  --line-strong: #3a3f44;
+  --line-faint: #181b1e;
+  --ring: #e9a23b;
+  --positive: #6fb48a;
+  --warning: #e2a24b;
+  --danger: #d4583f;
+
+  /* spacing rhythm */
+  --space-stack: 1.5rem;
+  --space-gutter: clamp(1.25rem, 4vw, 4rem);
+  --space-section: clamp(4.5rem, 10vw, 9rem);
+
+  /* motion durations */
+  --dur-tick: 90ms;
+  --dur-quick: 150ms;
+  --dur-snap: 220ms;
+  --dur-base: 340ms;
+  --dur-advance: 520ms;
+  --dur-pull: 760ms;
+  --dur-load: 1300ms;
+
+  color-scheme: dark;
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    /* Lenis owns smooth scroll when motion is allowed; avoid double-smoothing. */
+    html {
+      scroll-behavior: auto;
+    }
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    color: var(--text-strong);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    font-optical-sizing: auto;
+    font-variation-settings: "SOFT" 30, "WONK" 1;
+  }
+  ::selection {
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ============================================================
+   SIGNATURE UTILITIES
+   ============================================================ */
+@layer components {
+  /* periodic sheen sweep — used to draw the eye to the top credential */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      transparent 35%,
+      color-mix(in oklab, var(--color-accent) 38%, transparent) 50%,
+      transparent 65%
+    );
+    transform: translateX(-130%);
+    animation: shimmer 3.4s var(--ease-out-soft) infinite;
+  }
+  @keyframes shimmer {
+    0%,
+    55% {
+      transform: translateX(-130%);
+    }
+    100% {
+      transform: translateX(130%);
+    }
+  }
+
+  /* "charm" — the portrait leans in to blow a kiss, looping */
+  .charm-lean {
+    transform-origin: 50% 100%;
+    animation: charm-lean 4.6s ease-in-out infinite;
+  }
+  @keyframes charm-lean {
+    0%,
+    52%,
+    100% {
+      transform: translateY(0) scale(1);
+    }
+    38% {
+      transform: translateY(0) scale(1.006);
+    }
+    66% {
+      transform: translateY(-5px) scale(1.02);
+    }
+    78% {
+      transform: translateY(-1px) scale(1.004);
+    }
+  }
+
+  /* the kiss — amber <3 hearts that puff out and float up */
+  .charm-heart {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--color-accent);
+    font-size: clamp(13px, 1.3vw, 20px);
+    text-shadow: 0 0 12px color-mix(in oklab, var(--color-accent) 70%, transparent);
+    animation: charm-float 4.6s ease-out infinite;
+    will-change: transform, opacity;
+  }
+  @keyframes charm-float {
+    0%,
+    60% {
+      opacity: 0;
+      transform: translate(0, 0) scale(0.5);
+    }
+    68% {
+      opacity: 1;
+      transform: translate(calc(var(--dx) * 0.25), -10px) scale(0.95);
+    }
+    100% {
+      opacity: 0;
+      transform: translate(var(--dx), -66px) scale(1.3);
+    }
+  }
+
+  /* mono micro-label / HUD readout */
+  .label {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  /* never leave a JS pin transform on cards under reduced motion */
+  #projects [data-card] {
+    transform: none !important;
+  }
+}
+
+/* hide scrollbar on the native fallback carousel (still scrollable) */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
