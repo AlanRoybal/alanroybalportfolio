@@ -64,9 +64,9 @@ export function About() {
           also deep in MCP · agent frameworks · evals · RAG · prompt engineering
         </p>
 
-        <div className="mt-12">
+        <div className="mt-12 text-center">
           <span className="label text-text-faint">certifications</span>
-          <ul className="mt-4 flex flex-wrap gap-2">
+          <ul className="mt-4 flex flex-wrap justify-center gap-2">
             {certifications.map((c) => (
               <li
                 key={c}
