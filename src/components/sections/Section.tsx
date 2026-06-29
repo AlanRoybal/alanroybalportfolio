@@ -26,7 +26,12 @@ export function Section({ id, index, label, title, intro, tint, className, child
     <section
       id={id}
       data-snap
-      className={cn("relative w-full scroll-mt-16 py-[var(--space-section)]", tint ? "bg-surface-0" : "bg-bg")}
+      className={cn(
+        // transparent so the charm (ScrollCharm) flies behind the text; the body
+        // provides the base color. `tint` keeps a faint lift on alternating sections.
+        "relative w-full scroll-mt-16 py-[var(--space-section)]",
+        tint ? "bg-surface-0/40" : "bg-transparent",
+      )}
     >
       <div className="mx-auto w-full max-w-[var(--container-content)] px-[var(--space-gutter)]">
         <header data-reveal className="relative mb-14 border-b border-line pb-7">

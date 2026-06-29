@@ -1,12 +1,13 @@
 import { profile } from "@/content";
 import { ScrambleText } from "@/components/effects/ScrambleText";
+import { CharmWordmark } from "@/components/effects/CharmWordmark";
 
 export function Contact() {
   return (
     <footer
       id="contact"
       data-snap
-      className="relative w-full scroll-mt-16 bg-surface-0 pb-16 pt-[var(--space-section)]"
+      className="relative w-full scroll-mt-16 pb-16 pt-[var(--space-section)]"
     >
       <div className="mx-auto w-full max-w-[var(--container-content)] px-[var(--space-gutter)]">
         <div data-reveal className="border-t border-line pt-14">
@@ -51,15 +52,12 @@ export function Contact() {
           </div>
         </div>
 
-        {/* giant wordmark — the charm's landing target (see ScrollCharm) */}
-        <p
-          aria-hidden="true"
-          data-charm-target
+        {/* giant wordmark — held scrambled until the charm lands and resolves it
+            (CharmWordmark, via pretext). It is the charm's landing target. */}
+        <CharmWordmark
+          text="alan roybal"
           className="mt-24 font-display text-[length:clamp(3rem,17vw,15rem)] font-light lowercase leading-[0.85] tracking-[var(--tracking-tightest)] text-text-strong [will-change:transform]"
-        >
-          <ScrambleText text="alan roybal" trigger="view" durationMs={900} />
-          <span className="text-glow">.</span>
-        </p>
+        />
 
         <div className="label mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-line-faint pt-6 text-text-faint">
           <span>© 2026 Alan Roybal</span>
