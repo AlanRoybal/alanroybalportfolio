@@ -185,17 +185,6 @@
     outline-offset: 2px;
     border-radius: var(--radius-sm);
   }
-  /* dotted "graph paper" texture under every section — the background styling */
-  section,
-  footer {
-    background-image: radial-gradient(
-      circle,
-      color-mix(in oklab, var(--color-text-muted) 32%, transparent) 0.9px,
-      transparent 1.6px
-    );
-    background-size: 26px 26px;
-    background-position: center top;
-  }
 }
 
 /* ============================================================
