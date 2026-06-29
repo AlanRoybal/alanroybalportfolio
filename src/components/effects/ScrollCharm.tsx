@@ -2,23 +2,28 @@
 
 import { useEffect, useRef } from "react";
 import { ScrollTrigger } from "@/lib/gsap";
-import { charmSpriteFrames } from "@/content/charmSprite";
+import { charmSpriteFrames, charmSpriteCols } from "@/content/charmSprite";
+import {
+  prepareWithSegments,
+  measureNaturalWidth,
+  fontStringFrom,
+} from "@/lib/pretext";
 import { setCharmImpact } from "@/lib/charmImpact";
 
 /**
- * "The charm" — the pink-hearts clip (charm.mov) rasterised to white ASCII
- * (src/content/charmSprite.ts) — flies through the page *behind the text* as you
- * scroll:
+ * "The charm" — the pink-hearts clip rasterised to white ASCII
+ * (src/content/charmSprite.ts) — flies across the page as you scroll:
  *   1. diagonally side-to-side down the page (hero → experience),
  *   2. streaking along the side while the projects section pans horizontally,
- *   3. homing into the "alan roybal" wordmark, whose impact resolves it (the
- *      wordmark un-scrambles via pretext — see CharmWordmark) with a small jolt;
- *      the charm then vanishes.
+ *   3. homing into the "alan roybal" wordmark at a shallow angle, whose impact
+ *      resolves it (the wordmark un-scrambles via pretext — see CharmWordmark)
+ *      with a small jolt; the charm then vanishes.
  *
- * The flight is a pure function of scroll position, so it scrubs both ways:
- * scrolling back up rewinds it and re-scrambles the wordmark. The little sprite
- * itself animates (the hearts drift) on its own clock. Disabled under
- * prefers-reduced-motion.
+ * The clip is drawn facing right (its left→right travel direction); when the
+ * charm flies leftward it is mirrored. pretext pins the sprite's box width so
+ * its varying-length frames never reflow as they animate. The flight is a pure
+ * function of scroll position, so it scrubs both ways: scrolling back up rewinds
+ * it and re-scrambles the wordmark. Disabled under prefers-reduced-motion.
  */
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 const smooth = (t: number) => t * t * (3 - 2 * t);
@@ -41,8 +46,23 @@ export function ScrollCharm() {
     let hitX = 0;
     let hitDocY = 0;
     let wordmark: HTMLElement | null = null;
+    let lastX: number | null = null;
+    let facing = 1; // 1 = drawn orientation (moving right), -1 = mirrored
+
+    // pretext-pin the sprite's box width so varying-length frames never reflow.
+    const pinWidth = () => {
+      try {
+        const { font, opts } = fontStringFrom(charm);
+        const prepared = prepareWithSegments("0".repeat(charmSpriteCols), font, opts);
+        const w = measureNaturalWidth(prepared);
+        if (w > 0) charm.style.width = `${Math.ceil(w)}px`;
+      } catch {
+        /* best-effort */
+      }
+    };
 
     const measure = () => {
+      pinWidth();
       vw = window.innerWidth;
       vh = window.innerHeight;
       total = Math.max(
@@ -99,14 +119,24 @@ export function ScrollCharm() {
         y = vh * (0.8 + 0.05 * Math.sin(b * Math.PI * 4));
         rot = 5;
       } else {
+        // home into the wordmark at a SHALLOW angle: settle to its height early,
+        // then travel mostly horizontally into it.
         const c = smooth(clamp((s - projBottom) / Math.max(1, impactScroll - projBottom), 0, 1));
-        const sx = vw * 0.9;
-        const sy = vh * 0.82;
-        const ty = hitDocY - impactScroll;
-        x = sx + (hitX - sx) * c;
-        y = sy + (ty - sy) * c;
-        rot = (1 - c) * 5;
+        const startX = vw * 0.9; // continuous with the projects phase end
+        const startY = vh * 0.8;
+        const ty = hitDocY - impactScroll; // wordmark viewport y at impact
+        const cy = smooth(clamp(c / 0.55, 0, 1)); // reach target height by ~55%
+        x = startX + (hitX - startX) * c;
+        y = startY + (ty - startY) * cy;
+        rot = (1 - c) * 3;
       }
+
+      // mirror the sprite to face its travel direction (drawn facing right)
+      if (lastX !== null) {
+        if (x < lastX - 0.5) facing = -1;
+        else if (x > lastX + 0.5) facing = 1;
+      }
+      lastX = x;
 
       // wordmark resolve (0 → scrambled, 1 → resolved), completing on contact
       const resolve =
@@ -125,7 +155,7 @@ export function ScrollCharm() {
       }
 
       charm.style.opacity = String(opacity);
-      charm.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%) rotate(${rot}deg) scale(${scale})`;
+      charm.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%) rotate(${rot}deg) scale(${facing * scale}, ${scale})`;
 
       if (wordmark) {
         if (pulse > 0.001) {
@@ -189,9 +219,8 @@ export function ScrollCharm() {
     <pre
       ref={charmRef}
       aria-hidden="true"
-      className="pointer-events-none fixed left-0 top-0 m-0 select-none font-mono leading-[1] opacity-0"
+      className="pointer-events-none fixed left-0 top-0 z-[55] m-0 select-none font-mono leading-[1] opacity-0"
       style={{
-        zIndex: -1, // behind the (now transparent) section content, above the body bg
         fontSize: "clamp(5px, 0.72vw, 9px)",
         color: "var(--color-text-strong)",
         textShadow: "0 0 6px rgba(255,255,255,0.16)",

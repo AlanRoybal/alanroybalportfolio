@@ -7,7 +7,7 @@ export function Contact() {
     <footer
       id="contact"
       data-snap
-      className="relative w-full scroll-mt-16 pb-16 pt-[var(--space-section)]"
+      className="relative w-full scroll-mt-16 bg-surface-0 pb-16 pt-[var(--space-section)]"
     >
       <div className="mx-auto w-full max-w-[var(--container-content)] px-[var(--space-gutter)]">
         <div data-reveal className="border-t border-line pt-14">
