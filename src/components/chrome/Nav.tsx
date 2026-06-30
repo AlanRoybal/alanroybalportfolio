@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { profile } from "@/content";
 import { getLenis } from "@/lib/lenis";
+import { cn } from "@/lib/cn";
 
 const LINKS: [string, string][] = [
   ["about", "/#about"],
@@ -33,8 +34,51 @@ function scrollToHash(href: string) {
   }
 }
 
+const SECTION_IDS = ["about", "experience", "projects", "contact"];
+
 export function Nav() {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+
+  // Track scroll position for backdrop
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 60);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Track active section with IntersectionObserver
+  const observeSections = useCallback(() => {
+    const observers: IntersectionObserver[] = [];
+    const visible = new Map<string, number>();
+
+    for (const id of SECTION_IDS) {
+      const el = document.getElementById(id);
+      if (!el) continue;
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) visible.set(id, e.intersectionRatio);
+            else visible.delete(id);
+          }
+          let best: string | null = null;
+          let bestRatio = 0;
+          visible.forEach((ratio, key) => {
+            if (ratio > bestRatio) { best = key; bestRatio = ratio; }
+          });
+          setActiveSection(best);
+        },
+        { threshold: [0, 0.2, 0.4, 0.6], rootMargin: "-80px 0px -20% 0px" },
+      );
+      io.observe(el);
+      observers.push(io);
+    }
+    return () => observers.forEach((io) => io.disconnect());
+  }, []);
+
+  useEffect(() => observeSections(), [observeSections]);
 
   const onNavClick =
     (href: string, after?: () => void) => (e: React.MouseEvent) => {
@@ -61,7 +105,12 @@ export function Nav() {
   }, [open]);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-[65] flex items-center justify-between gap-4 px-[clamp(16px,3vw,34px)] py-4">
+    <header
+      className={cn(
+        "fixed inset-x-0 top-0 z-[65] flex items-center justify-between gap-4 px-[clamp(16px,3vw,34px)] py-4 transition-[background-color,backdrop-filter] duration-300",
+        scrolled && "bg-bg/80 backdrop-blur-md",
+      )}
+    >
       <Link
         href="/#top"
         onClick={onNavClick("/#top")}
@@ -76,7 +125,10 @@ export function Nav() {
             key={href}
             href={href}
             onClick={onNavClick(href)}
-            className="label text-text-muted transition-colors duration-[var(--dur-quick)] hover:text-accent"
+            className={cn(
+              "label transition-colors duration-[var(--dur-quick)] hover:text-accent",
+              activeSection === href.replace("/#", "") ? "text-accent" : "text-text-muted",
+            )}
           >
             {label}
           </Link>
