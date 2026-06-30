@@ -101,12 +101,6 @@ function ProjectLinks({ project }: { project: Project }) {
 function OverviewPanel({ project, pi, total }: { project: Project; pi: number; total: number }) {
   return (
     <div className="relative mx-auto w-full max-w-[var(--container-content)] px-[clamp(20px,6vw,90px)]">
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-24 right-[clamp(20px,6vw,90px)] font-display text-[length:clamp(7rem,20vw,18rem)] font-light leading-none text-text-strong opacity-[0.05]"
-      >
-        {pad(pi + 1)}
-      </span>
       <div className="flex flex-wrap items-center gap-3">
         <span className="label text-text-faint">
           {pad(pi + 1)} / {pad(total)} · overview
@@ -273,12 +267,6 @@ export function ProjectsHorizontal() {
     >
       <div className="mx-auto w-full max-w-[var(--container-content)] px-[var(--space-gutter)] pt-[var(--space-section)]">
         <header className="relative mb-2 border-b border-line pb-7">
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute -top-8 right-0 font-display text-[length:clamp(4rem,12vw,9rem)] font-light leading-none text-text-strong opacity-[0.05]"
-          >
-            03
-          </span>
           <span className="label text-text-faint">03 / projects</span>
           <h2 className="mt-4 max-w-[20ch] font-display text-[length:var(--text-3xl)] font-light lowercase leading-[1.02] tracking-tight text-text-strong [&_em]:italic [&_em]:text-glow">
             things i&apos;ve{" "}
@@ -330,13 +318,24 @@ export function ProjectsHorizontal() {
           ))}
         </ul>
 
-        {/* progress: project number + which panel + scrubbed bar */}
+        {/* progress: project number + dots + scrubbed bar */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute bottom-8 left-[var(--space-gutter)] right-[var(--space-gutter)] hidden items-center gap-4 motion-safe:md:flex"
         >
           <span className="label tabular-nums text-text-strong">{pad(project + 1)}</span>
           <span className="label text-text-faint">{kind}</span>
+          <div className="flex items-center gap-2">
+            {PANELS.map((_, i) => (
+              <span
+                key={i}
+                className={cn(
+                  "h-1.5 rounded-full transition-all duration-300",
+                  i === active ? "w-6 bg-accent" : "w-1.5 bg-line-strong",
+                )}
+              />
+            ))}
+          </div>
           <span className="relative h-px flex-1 bg-line">
             <span ref={fillRef} className="absolute inset-0 origin-left scale-x-0 bg-accent" />
           </span>

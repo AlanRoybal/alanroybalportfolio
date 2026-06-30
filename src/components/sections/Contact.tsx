@@ -23,32 +23,34 @@ export function Contact() {
             I&apos;m looking for new-grad software roles in AI and systems. The inbox is open — say hi.
           </p>
 
-          <div className="mt-9 flex flex-wrap items-center gap-3">
+          <div className="mt-9 flex flex-col gap-4">
             <a
               href={`mailto:${profile.email}`}
-              className="inline-flex items-center gap-2 rounded-[var(--radius-full)] bg-accent px-5 py-2.5 text-sm font-medium text-on-accent transition-colors duration-[var(--dur-quick)] ease-[var(--ease-out-soft)] hover:bg-accent-hi"
+              className="inline-flex w-fit items-center gap-2 rounded-[var(--radius-full)] bg-accent px-5 py-2.5 text-sm font-medium text-on-accent transition-colors duration-[var(--dur-quick)] ease-[var(--ease-out-soft)] hover:bg-accent-hi"
             >
               {profile.email} <span aria-hidden="true">→</span>
             </a>
-            {profile.socials.map((s) => (
+            <div className="flex flex-wrap items-center gap-3">
+              {profile.socials.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-[var(--radius-full)] border border-line px-5 py-2.5 text-sm text-text-muted transition-colors duration-[var(--dur-quick)] hover:border-accent hover:text-accent"
+                >
+                  {s.label.toLowerCase()}
+                </a>
+              ))}
               <a
-                key={s.label}
-                href={s.href}
+                href={profile.resumeHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-[var(--radius-full)] border border-line px-5 py-2.5 text-sm text-text-muted transition-colors duration-[var(--dur-quick)] hover:border-accent hover:text-accent"
               >
-                {s.label.toLowerCase()}
+                resume <span aria-hidden="true">↓</span>
               </a>
-            ))}
-            <a
-              href={profile.resumeHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-[var(--radius-full)] border border-line px-5 py-2.5 text-sm text-text-muted transition-colors duration-[var(--dur-quick)] hover:border-accent hover:text-accent"
-            >
-              resume <span aria-hidden="true">↓</span>
-            </a>
+            </div>
           </div>
         </div>
 
@@ -56,7 +58,7 @@ export function Contact() {
             (CharmWordmark, via pretext). It is the charm's landing target. */}
         <CharmWordmark
           text="alan roybal"
-          className="mt-24 font-display text-[length:clamp(3rem,17vw,15rem)] font-light lowercase leading-[0.85] tracking-[var(--tracking-tightest)] text-text-strong [will-change:transform]"
+          className="mt-24 whitespace-nowrap font-display text-[length:clamp(3rem,10vw,15rem)] font-light lowercase leading-[0.85] tracking-[var(--tracking-tightest)] text-text-strong [will-change:transform]"
         />
 
         <div className="label mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-line-faint pt-6 text-text-faint">
@@ -65,7 +67,7 @@ export function Contact() {
         </div>
       </div>
       {/* small scroll runway so the charm can land on the wordmark and settle (ScrollCharm) */}
-      <div aria-hidden="true" className="h-[14vh]" />
+      <div aria-hidden="true" className="h-[4vh]" />
     </footer>
   );
 }

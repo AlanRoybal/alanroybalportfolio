@@ -86,7 +86,7 @@ export function CharmWordmark({
       const draw = (p: number) => {
         const revealed = p * total;
         let idx = 0;
-        const seed = Math.floor(performance.now() / 70);
+        const seed = Math.floor(performance.now() / 40);
         for (const part of parts) {
           let out = "";
           for (let i = 0; i < part.chars.length; i++) {

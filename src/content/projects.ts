@@ -32,7 +32,9 @@ export const projects: Project[] = [
         body: "Selected for the Google Gemini Developer Spotlight and running in a production generative-audio model.",
       },
     ],
-    links: [],
+    links: [
+      { label: "GitHub", href: "https://github.com/AlanRoybal/earth2echo" },
+    ],
     featured: true,
   },
   {
