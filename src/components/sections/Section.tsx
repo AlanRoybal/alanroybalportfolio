@@ -30,12 +30,6 @@ export function Section({ id, index, label, title, intro, tint, className, child
     >
       <div className="mx-auto w-full max-w-[var(--container-content)] px-[var(--space-gutter)]">
         <header data-reveal className="relative mb-14 border-b border-line pb-7">
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute -top-8 right-0 font-display text-[length:clamp(4rem,12vw,9rem)] font-light leading-none text-text-strong opacity-[0.05]"
-          >
-            {index}
-          </span>
           <span className="label text-text-faint">
             {index} / {label}
           </span>
