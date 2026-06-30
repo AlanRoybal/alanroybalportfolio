@@ -7,7 +7,7 @@ function Row({ job }: { job: ExperienceItem }) {
   return (
     <article
       data-reveal
-      className="rounded-[var(--radius-xl)] border border-line bg-surface-0 p-7 transition-colors duration-[var(--dur-base)] hover:border-line-strong md:p-8"
+      className="rounded-[var(--radius-xl)] border border-line bg-surface-0 p-7 md:p-8"
     >
       <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
         <div className="max-w-[62ch]">
@@ -69,11 +69,13 @@ export function Experience() {
         ))}
       </div>
 
-      <p className="label mb-5 mt-12 text-text-faint">leadership &amp; community</p>
-      <div className="flex flex-col gap-5">
-        {leadership.map((j) => (
-          <Row key={j.id} job={j} />
-        ))}
+      <div className="mt-14 border-t border-line pt-10">
+        <span className="label text-text-faint">leadership &amp; community</span>
+        <div className="mt-6 flex flex-col gap-5">
+          {leadership.map((j) => (
+            <Row key={j.id} job={j} />
+          ))}
+        </div>
       </div>
     </Section>
   );
