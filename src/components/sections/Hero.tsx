@@ -67,7 +67,7 @@ export function Hero() {
           </a>
           <a
             href="#contact"
-            className="inline-flex items-center gap-2 px-3 py-2.5 text-sm text-text-muted transition-colors duration-[var(--dur-quick)] hover:text-accent"
+            className="inline-flex items-center gap-2 rounded-[var(--radius-full)] border border-line px-5 py-2.5 text-sm text-text-muted transition-colors duration-[var(--dur-quick)] hover:border-accent hover:text-accent"
           >
             get in touch
           </a>
@@ -80,7 +80,7 @@ export function Hero() {
           data-flow-portrait
           role="img"
           aria-label="An animated ASCII clip blowing a kiss"
-          className="relative z-0 mx-auto w-[min(94vw,600px)] justify-self-center lg:mx-0 lg:w-[clamp(440px,44vw,760px)] lg:justify-self-end"
+          className="relative z-0 mx-auto w-[min(94vw,600px)] justify-self-center opacity-60 lg:mx-0 lg:w-[clamp(440px,44vw,760px)] lg:justify-self-end"
         >
           <AsciiPortrait className="select-none font-mono text-[length:clamp(4px,0.8vw,8px)]" />
         </div>
@@ -89,9 +89,24 @@ export function Hero() {
       {/* scroll cue */}
       <div
         aria-hidden="true"
-        className="label absolute inset-x-0 bottom-6 mx-auto hidden w-fit text-text-faint motion-safe:block"
+        className="absolute inset-x-0 bottom-6 mx-auto flex w-fit flex-col items-center gap-2 text-text-faint"
       >
-        scroll ↓
+        <span className="label">scroll</span>
+        <svg
+          width="16"
+          height="24"
+          viewBox="0 0 16 24"
+          fill="none"
+          className="motion-safe:animate-bounce"
+        >
+          <path
+            d="M8 4v12m0 0l-4-4m4 4l4-4"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </div>
     </section>
   );
