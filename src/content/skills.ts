@@ -32,8 +32,14 @@ export const skillGroups: SkillGroup[] = [
 ];
 
 /** Certifications. */
-export const certifications: string[] = [
-  "AWS Machine Learning Specialist",
-  "AWS Solutions Architect Associate",
-  "NVIDIA GenAI & LLM Engineer",
+export interface Certification {
+  name: string;
+  provider: "aws" | "nvidia";
+  badge: string;
+}
+
+export const certifications: Certification[] = [
+  { name: "AWS Machine Learning Specialist", provider: "aws", badge: "/badges/aws-ml-specialty.png" },
+  { name: "AWS Solutions Architect Associate", provider: "aws", badge: "/badges/aws-sa-associate.png" },
+  { name: "NVIDIA GenAI & LLM Engineer", provider: "nvidia", badge: "/badges/nvidia-genai.png" },
 ];
