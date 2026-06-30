@@ -97,7 +97,7 @@ export function ScrollCharm() {
         hitX = vw * 0.3;
         hitDocY = total + vh * 0.5;
       }
-      impactScroll = clamp(hitDocY - vh * 0.72, projBottom + 1, total - vh * 0.14);
+      impactScroll = clamp(hitDocY - vh * 0.85, projBottom + 1, total - vh * 0.14);
       render();
     };
 
@@ -145,12 +145,12 @@ export function ScrollCharm() {
       setCharmImpact(resolve);
 
       // impact envelope (jolt), centred on contact
-      const half = vh * 0.12;
+      const half = vh * 0.08;
       const k = clamp((s - (impactScroll - half)) / (2 * half), 0, 1);
       const pulse = Math.sin(k * Math.PI);
       if (s >= projBottom) {
         scale = 1 + pulse * 0.45;
-        opacity = 1 - smooth(clamp((k - 0.5) / 0.5, 0, 1));
+        opacity = 1 - smooth(clamp((k - 0.35) / 0.4, 0, 1));
       }
 
       charm.style.opacity = String(opacity);
