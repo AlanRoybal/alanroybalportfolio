@@ -19,6 +19,11 @@ import { setCharmImpact } from "@/lib/charmImpact";
  *      resolves it (the wordmark un-scrambles via pretext — see CharmWordmark)
  *      with a small jolt; the charm then vanishes.
  *
+ * The flight only reads as ornament while the page is moving. At rest the charm
+ * would just be parked on top of whatever text is under it (it scrubs with
+ * scroll, so it CAN stop mid-paragraph) — so it dims to near-invisible when
+ * scrolling goes idle and brightens back the moment the page moves.
+ *
  * The clip is drawn facing right (its left→right travel direction); when the
  * charm flies leftward it is mirrored. pretext pins the sprite's box width so
  * its varying-length frames never reflow as they animate. The flight is a pure
@@ -30,6 +35,9 @@ const smooth = (t: number) => t * t * (3 - 2 * t);
 const FRAME_MS = 46; // ~the clip's native frame rate
 const SWEEPS = 4.5; // zigzag sweeps across the journey (ends off the right edge)
 const OFF = 0.62; // x amplitude in vw — large enough to carry the charm fully off-screen
+const IDLE_MS = 850; // no scroll for this long → the charm rests
+const IDLE_DIM = 0.14; // resting opacity multiplier (won't fight text underneath)
+const DIM_EASE = 0.08; // per-frame easing toward the active/resting multiplier
 
 export function ScrollCharm() {
   const charmRef = useRef<HTMLPreElement>(null);
@@ -50,6 +58,10 @@ export function ScrollCharm() {
     let wordmark: HTMLElement | null = null;
     let lastX: number | null = null;
     let facing = 1; // 1 = drawn orientation (moving right), -1 = mirrored
+    let envOpacity = 0; // flight envelope opacity (set by render)
+    let dim = 1; // eased activity multiplier (1 scrolling → IDLE_DIM at rest)
+    let lastScrollAt = 0;
+    let lastS = -1;
 
     // pretext-pin the sprite's box width so varying-length frames never reflow.
     const pinWidth = () => {
@@ -103,6 +115,10 @@ export function ScrollCharm() {
 
     const render = () => {
       const s = window.scrollY;
+      if (s !== lastS) {
+        lastS = s;
+        lastScrollAt = performance.now();
+      }
       let x: number;
       let y: number;
       let rot = 0;
@@ -153,7 +169,8 @@ export function ScrollCharm() {
         opacity = 1 - smooth(clamp((k - 0.35) / 0.4, 0, 1));
       }
 
-      charm.style.opacity = String(opacity);
+      envOpacity = opacity;
+      charm.style.opacity = String(envOpacity * dim);
       charm.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%) rotate(${rot}deg) scale(${facing * scale}, ${scale})`;
 
       if (wordmark) {
@@ -196,6 +213,13 @@ export function ScrollCharm() {
         fi = (fi + 1) % charmSpriteFrames.length;
         charm.textContent = charmSpriteFrames[fi];
       }
+      // rest when scrolling goes idle; wake instantly on movement
+      const target = t - lastScrollAt > IDLE_MS ? IDLE_DIM : 1;
+      const next = dim + (target - dim) * DIM_EASE;
+      if (Math.abs(next - dim) > 0.0005) {
+        dim = next;
+        charm.style.opacity = String(envOpacity * dim);
+      }
       rafA = requestAnimationFrame(animate);
     };
     rafA = requestAnimationFrame(animate);
@@ -218,7 +242,10 @@ export function ScrollCharm() {
     <pre
       ref={charmRef}
       aria-hidden="true"
-      className="pointer-events-none fixed left-0 top-0 z-[55] m-0 select-none font-mono leading-[1] opacity-0"
+      // z-40: above text and section backgrounds, but BELOW the lifted cards
+      // (z-45) — the charm dips behind them as it sweeps, which is what sells
+      // the page as a stack of planes instead of one surface.
+      className="pointer-events-none fixed left-0 top-0 z-40 m-0 select-none font-mono leading-[1] opacity-0"
       style={{
         fontSize: "clamp(5px, 0.72vw, 9px)",
         color: "var(--color-text-strong)",

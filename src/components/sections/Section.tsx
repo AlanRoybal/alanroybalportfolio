@@ -30,15 +30,22 @@ export function Section({ id, index, label, title, intro, tint, className, child
     >
       <div className="mx-auto w-full max-w-[var(--container-content)] px-[var(--space-gutter)]">
         <header data-reveal className="relative mb-14 border-b border-line pb-7">
-          <span className="label text-text-faint">
-            {index} / {label}
-          </span>
-          <h2 className="mt-4 max-w-[20ch] font-display text-[length:var(--text-3xl)] font-light lowercase leading-[1.02] tracking-tight text-text-strong [&_em]:italic [&_em]:text-glow">
-            {title}
-          </h2>
-          {intro ? (
-            <p className="mt-5 max-w-[60ch] text-[length:var(--text-md)] text-text-muted">{intro}</p>
-          ) : null}
+          {/* inner wrapper carries the parallax drift so it never fights the
+              header's own scroll-in reveal (both are transforms) */}
+          <div data-parallax="26">
+            <span className="label text-text-faint">
+              {index} / {label}
+            </span>
+            <h2
+              data-kinetic
+              className="mt-4 max-w-[20ch] font-display text-[length:var(--text-3xl)] font-light lowercase leading-[1.02] tracking-tight text-text-strong [&_em]:italic [&_em]:text-glow"
+            >
+              {title}
+            </h2>
+            {intro ? (
+              <p className="mt-5 max-w-[60ch] text-[length:var(--text-md)] text-text-muted">{intro}</p>
+            ) : null}
+          </div>
         </header>
         {children}
       </div>

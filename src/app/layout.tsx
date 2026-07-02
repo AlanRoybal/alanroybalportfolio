@@ -5,6 +5,8 @@ import { SmoothScroll } from "@/components/providers/SmoothScroll";
 import { ScrollReveal } from "@/components/providers/ScrollReveal";
 import { Nav } from "@/components/chrome/Nav";
 import { ScrollProgress } from "@/components/chrome/ScrollProgress";
+import { IntroCharm } from "@/components/effects/IntroCharm";
+import { CursorAura } from "@/components/effects/CursorAura";
 import { SITE, jsonLd } from "@/lib/site";
 
 // Display — high-contrast old-style serif with an optical-size axis. Used with
@@ -108,6 +110,12 @@ export default function RootLayout({
           <ScrollReveal />
           {children}
         </SmoothScroll>
+        {/* interaction + atmosphere layers (all pointer-events: none) */}
+        <CursorAura />
+        <div aria-hidden="true" className="vignette" />
+        <div aria-hidden="true" className="grain" />
+        {/* load overture — the charm resolves the name, the veil wipes up */}
+        <IntroCharm />
       </body>
     </html>
   );

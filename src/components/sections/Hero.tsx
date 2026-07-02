@@ -10,7 +10,7 @@ export function Hero() {
     <section
       id="top"
       data-snap
-      className="relative flex min-h-dvh items-center overflow-hidden"
+      className="relative flex min-h-dvh items-start overflow-hidden pt-28 sm:pt-32 lg:items-center lg:pt-0"
     >
       {/* generative neural constellation */}
       <NeuralField />
@@ -26,10 +26,16 @@ export function Hero() {
       <div className="relative mx-auto grid w-full max-w-[var(--container-wide)] grid-cols-1 items-center gap-x-14 gap-y-12 px-[clamp(20px,5vw,72px)] lg:grid-cols-[minmax(0,1fr)_auto]">
        <div>
         <p data-hero className="label mb-6 text-text-faint">
-          Alan Roybal · AI &amp; Systems Engineer · Dallas, TX
+          {/* keep each segment intact so mobile wraps between dots, not mid-segment */}
+          <span className="whitespace-nowrap">Alan Roybal</span>
+          <span aria-hidden="true"> · </span>
+          <span className="whitespace-nowrap">AI &amp; Systems Engineer</span>
+          <span aria-hidden="true"> · </span>
+          <span className="whitespace-nowrap">Dallas, TX</span>
         </p>
         <h1
           data-hero
+          data-kinetic
           className="font-display font-light lowercase tracking-[var(--tracking-tightest)] text-text-strong"
         >
           <span className="block text-[length:clamp(1.4rem,3.2vw,2.4rem)] text-text-muted">
@@ -63,7 +69,7 @@ export function Hero() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-[var(--radius-full)] border border-line px-5 py-2.5 text-sm text-text-muted transition-colors duration-[var(--dur-quick)] hover:border-accent hover:text-accent"
           >
-            résumé <span aria-hidden="true">↓</span>
+            resume <span aria-hidden="true">↓</span>
           </a>
           <a
             href="#contact"
@@ -80,9 +86,12 @@ export function Hero() {
           data-flow-portrait
           role="img"
           aria-label="An animated ASCII clip blowing a kiss"
-          className="relative z-0 mx-auto w-[min(94vw,600px)] justify-self-center opacity-60 lg:mx-0 lg:w-[clamp(440px,44vw,760px)] lg:justify-self-end"
+          className="relative z-0 mx-auto w-[min(94vw,600px)] justify-self-center opacity-60 max-lg:opacity-40 max-lg:[mask-image:linear-gradient(to_bottom,black_60%,transparent_95%)] lg:mx-0 lg:w-[clamp(440px,44vw,760px)] lg:justify-self-end"
         >
-          <AsciiPortrait className="select-none font-mono text-[length:clamp(4px,0.8vw,8px)]" />
+          {/* inner wrapper drifts on its own plane, behind the copy */}
+          <div data-parallax="44">
+            <AsciiPortrait className="select-none font-mono text-[length:clamp(4px,0.8vw,8px)]" />
+          </div>
         </div>
       </div>
 
