@@ -57,11 +57,11 @@ function Flank({ side }: { side: "left" | "right" }) {
   const inner = side === "left" ? "right" : "left";
   return (
     <div
-      className="pointer-events-none absolute inset-y-0 hidden w-[clamp(240px,21vw,420px)] overflow-hidden lg:block"
+      className="pointer-events-none absolute inset-y-0 hidden w-[clamp(220px,19.5vw,380px)] overflow-hidden lg:block"
       style={{
         [side]: 0,
-        maskImage: `linear-gradient(to ${side === "right" ? "left" : "right"}, black 65%, transparent)`,
-        WebkitMaskImage: `linear-gradient(to ${side === "right" ? "left" : "right"}, black 65%, transparent)`,
+        maskImage: `linear-gradient(to ${side === "right" ? "left" : "right"}, black 60%, transparent)`,
+        WebkitMaskImage: `linear-gradient(to ${side === "right" ? "left" : "right"}, black 60%, transparent)`,
       }}
     >
       {PLANES.map((p) => (
