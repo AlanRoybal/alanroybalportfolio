@@ -1,15 +1,16 @@
 /**
  * Section seams — four unique full-bleed transitions, one per joint, all in
- * the same origami-cliffside style as the side gutters (folded paper facets:
- * a lit face, a shadow face, a crease). Each seam is a recessed paper band
- * with faint ridgelines on a far parallax plane and a folded centerpiece
- * scene on the near plane:
+ * the same origami-cliffside style as the side gutters, rendered to read as
+ * REAL folded paper: crumple relief (feTurbulence → feDiffuseLighting
+ * multiplied over the fills), ragged accordion strata with seeded jitter
+ * (never a straight rule), crease highlights with shadow tucked under each
+ * lip, and a soft warm cast shadow dropping every piece onto the band.
  *
- *   `cores`     — hero → about: faceted peaks on a ridgeline; the signal
- *                 pulse travels the trail between them (the one amber thread
- *                 through the landscape).
- *   `monoliths` — about → experience: terraced mesas, strata stacked like
- *                 pressed paper, their sunlit terrace edges breathing.
+ *   `cores`     — hero → about: crumpled peaks on a ridgeline; the signal
+ *                 pulse travels the trail between them (the one amber
+ *                 thread through the landscape).
+ *   `monoliths` — about → experience: terraced mesas of pleated strata,
+ *                 their sunlit terrace edges breathing.
  *   `terminal`  — experience → projects: an origami pine grove around a
  *                 folded grey stream, a paper lantern blinking like the
  *                 site's terminal caret.
@@ -40,7 +41,168 @@ const GREY = "#b9b5a7";
 const GREY_LIGHT = "#d5d1c3";
 const AMBER = "#b97d22";
 const AMBER_HI = "#e9a23b";
-const CREASE = "rgba(46,34,20,0.2)";
+const CREASE_HI = "rgba(255,252,240,0.4)";
+const CREASE_LO = "rgba(46,30,14,0.3)";
+
+const TAN_RAMP = {
+  crest: ["#dcc6a2", "#d7bf98", "#e3cfae"],
+  valley: ["#a5805a", "#9b7752", "#b08a62"],
+  deep: ["#7d5e41", "#6f5238"],
+};
+const GREY_RAMP = {
+  crest: ["#d5d1c3", "#dcd8cb", "#cfcaba"],
+  valley: ["#b9b5a7", "#b1ac9d"],
+  deep: ["#9c9789", "#948f81"],
+};
+type Ramp = typeof TAN_RAMP;
+
+/* deterministic PRNG — same jitter on server and client render */
+const mkRng = (seed: number) => {
+  let t = seed;
+  return () => {
+    t += 0x6d2b79f5;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+};
+
+const foldEdge = (
+  r: () => number,
+  x0: number,
+  x1: number,
+  y: number,
+  amp: number,
+): [number, number][] => {
+  const pts: [number, number][] = [];
+  for (let x = x0; ; x += 16 + r() * 12) {
+    const last = x >= x1;
+    const xx = last ? x1 + (r() - 0.5) * 5 : x + (r() - 0.5) * 4;
+    pts.push([
+      Math.round(xx * 10) / 10,
+      Math.round((y + (r() - 0.5) * 2 * amp) * 10) / 10,
+    ]);
+    if (last) break;
+  }
+  return pts;
+};
+
+const toPoints = (pts: [number, number][]) => pts.map((p) => p.join(",")).join(" ");
+
+/** Pleated strata block — ragged bands over a fold-shadow base. */
+function Strata({
+  seed,
+  x0,
+  x1,
+  y0,
+  y1,
+  ramp,
+}: {
+  seed: number;
+  x0: number;
+  x1: number;
+  y0: number;
+  y1: number;
+  ramp: Ramp;
+}) {
+  const r = mkRng(seed);
+  const n = Math.max(4, Math.round((y1 - y0) / 13));
+  const bh = (y1 - y0) / n;
+  const bands: React.ReactNode[] = [
+    <polygon
+      key="base"
+      points={toPoints([[x0 - 2, y0 + 3], [x1 + 2, y0 + 3], [x1 + 3, y1], [x0 - 3, y1]])}
+      fill={ramp.deep[0]}
+    />,
+  ];
+  let prev = foldEdge(r, x0, x1, y0, 4);
+  for (let i = 0; i < n; i++) {
+    const next = foldEdge(r, x0, x1, y0 + (i + 1) * bh, 4);
+    const pool = i % 4 === 3 ? ramp.deep : i % 2 ? ramp.valley : ramp.crest;
+    bands.push(
+      <polygon
+        key={i}
+        points={toPoints([...prev, ...[...next].reverse()])}
+        fill={pool[(r() * pool.length) | 0]}
+      />,
+    );
+    if (i % 2 === 0) {
+      bands.push(
+        <polyline key={`h${i}`} points={toPoints(prev)} fill="none" stroke={CREASE_HI} strokeWidth="0.8" />,
+        <polyline
+          key={`s${i}`}
+          points={toPoints(next.map(([x, y]) => [x, y - 1.2] as [number, number]))}
+          fill="none"
+          stroke={CREASE_LO}
+          strokeWidth="1"
+        />,
+      );
+    }
+    prev = next;
+  }
+  return <>{bands}</>;
+}
+
+/** The origami pine — jittered fold tiers with a lit/shadow split. */
+function Pine({ seed, x, y, s = 1 }: { seed: number; x: number; y: number; s?: number }) {
+  const r = mkRng(seed);
+  const tiers: React.ReactNode[] = [];
+  for (let i = 0; i < 3; i++) {
+    const w = 16 - i * 4 + (r() - 0.5) * 2;
+    const yb = -i * 7 + (r() - 0.5) * 1.5;
+    const yt = yb - 14 + (r() - 0.5) * 2;
+    const lean = (r() - 0.5) * 2.4;
+    tiers.push(
+      <polygon key={`l${i}`} points={`${-w},${yb} ${lean},${yt} ${lean},${yb}`} fill="#7a5a3d" />,
+      <polygon key={`r${i}`} points={`${lean},${yt} ${w},${yb} ${lean},${yb}`} fill="#4e3a27" />,
+      <polyline
+        key={`c${i}`}
+        points={`${lean},${yt} ${lean},${yb}`}
+        stroke={CREASE_HI}
+        strokeWidth="0.7"
+        fill="none"
+      />,
+    );
+  }
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`}>
+      <rect x="-2" y="0" width="4" height="6" fill="#43301f" />
+      {tiers}
+    </g>
+  );
+}
+
+/** Crumple + shadow filter defs, id-scoped per seam variant. */
+function PaperDefs({ uid, seed, scale }: { uid: string; seed: number; scale: number }) {
+  return (
+    <defs>
+      <filter id={`cr-${uid}`} x="-15%" y="-15%" width="130%" height="130%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.014 0.026" numOctaves={4} seed={seed} result="n" />
+        <feDiffuseLighting in="n" lightingColor="#ffffff" surfaceScale={scale} diffuseConstant={1.05} result="l">
+          <feDistantLight azimuth={235} elevation={55} />
+        </feDiffuseLighting>
+        <feComposite in="l" in2="SourceGraphic" operator="arithmetic" k1={1} k2={0} k3={0} k4={0} />
+        <feComposite in2="SourceAlpha" operator="in" />
+      </filter>
+      <filter id={`ds-${uid}`} x="-40%" y="-40%" width="180%" height="180%">
+        <feDropShadow dx={3} dy={7} stdDeviation={5} floodColor="#3f2f1c" floodOpacity={0.3} />
+      </filter>
+      <radialGradient id={`halo-${uid}`}>
+        <stop offset="0" stopColor={AMBER} stopOpacity="0.3" />
+        <stop offset="1" stopColor={AMBER} stopOpacity="0" />
+      </radialGradient>
+    </defs>
+  );
+}
+
+/** A crumpled paper piece: cast shadow outside, crumple relief inside. */
+function Paper({ uid, children }: { uid: string; children: React.ReactNode }) {
+  return (
+    <g filter={`url(#ds-${uid})`}>
+      <g filter={`url(#cr-${uid})`}>{children}</g>
+    </g>
+  );
+}
 
 // far-plane ridgelines — the horizon behind every seam
 const FAR_RIDGES = [
@@ -56,50 +218,86 @@ const READOUTS: Record<Variant, [string, string]> = {
 };
 
 /* ------------------------------------------------------------------ */
-/* shared mark — the origami pine (three fold tiers, lit/shadow split) */
+/* cores — crumpled peaks; the signal pulse walks the ridge trail      */
 /* ------------------------------------------------------------------ */
 
-function Pine({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
-  return (
-    <g transform={`translate(${x} ${y}) scale(${s})`}>
-      <rect x="-2" y="0" width="4" height="6" fill="#4a3624" />
-      <polygon points="-16,0 0,-14 0,0" fill="#7a5a3d" />
-      <polygon points="0,-14 16,0 0,0" fill={KRAFT_DARK} />
-      <polygon points="-12,-8 0,-20 0,-8" fill="#7a5a3d" />
-      <polygon points="0,-20 12,-8 0,-8" fill={KRAFT_DARK} />
-      <polygon points="-8,-16 0,-28 0,-16" fill="#7a5a3d" />
-      <polygon points="0,-28 8,-16 0,-16" fill={KRAFT_DARK} />
-    </g>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* cores — faceted peaks; the signal pulse walks the ridge trail       */
-/* ------------------------------------------------------------------ */
-
-function Peak({ x, y, w, h }: { x: number; y: number; w: number; h: number }) {
+function Peak({
+  uid,
+  seed,
+  x,
+  y,
+  w,
+  h,
+}: {
+  uid: string;
+  seed: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}) {
+  const r = mkRng(seed);
+  // ragged base and a slightly off-centre summit
+  const apex: [number, number] = [(r() - 0.5) * w * 0.16, -h];
+  const base = foldEdge(r, -w, w, 0, 3);
+  // triangulated facets fanning from the summit, lit left → shadowed right
+  const fills = [TAN_LIGHT, SAND, TAN, KRAFT, KRAFT_DARK];
+  const step = Math.max(1, Math.floor(base.length / 4));
+  const corners: [number, number][] = [];
+  for (let i = 0; i < base.length; i += step) corners.push(base[i]);
+  if (corners[corners.length - 1] !== base[base.length - 1]) corners.push(base[base.length - 1]);
   return (
     <g transform={`translate(${x} ${y})`} className="seam-breathe">
-      <circle r={w * 1.4} cy={-h * 0.4} fill="url(#seam-halo)" />
-      <polygon points={`${-w},0 0,${-h} 0,0`} fill={TAN_LIGHT} stroke={CREASE} strokeWidth="1" />
-      <polygon points={`0,${-h} ${w},0 0,0`} fill={TAN} stroke={CREASE} strokeWidth="1" />
-      {/* sand cap catching the light */}
-      <polygon points={`${-w * 0.28},${-h * 0.72} 0,${-h} ${w * 0.24},${-h * 0.76} 0,${-h * 0.62}`} fill={SAND} />
-      {/* alpenglow crease — the one amber facet */}
-      <polygon points={`0,${-h} ${w * 0.24},${-h * 0.76} ${w * 0.1},${-h * 0.66}`} fill={AMBER_HI} opacity="0.7" />
+      <circle r={w * 1.4} cy={-h * 0.4} fill={`url(#halo-${uid})`} />
+      <Paper uid={uid}>
+        {corners.slice(0, -1).map((c, i) => (
+          <polygon
+            key={i}
+            points={toPoints([apex, c, corners[i + 1]])}
+            fill={fills[Math.min(i, fills.length - 1)]}
+          />
+        ))}
+        {/* crease ridges radiating from the summit */}
+        {corners.slice(1, -1).map((c, i) => (
+          <polyline
+            key={`c${i}`}
+            points={toPoints([apex, c])}
+            fill="none"
+            stroke={i < 2 ? CREASE_HI : CREASE_LO}
+            strokeWidth="0.9"
+          />
+        ))}
+        {/* ragged sand cap catching the light */}
+        <polygon
+          points={toPoints([
+            apex,
+            [apex[0] + w * 0.22, -h * 0.74],
+            [apex[0] + w * 0.08, -h * 0.68],
+            [apex[0] - w * 0.1, -h * 0.72],
+            [apex[0] - w * 0.24, -h * 0.7],
+          ])}
+          fill={SAND}
+        />
+        {/* alpenglow crease — the one amber facet */}
+        <polygon
+          points={toPoints([apex, [apex[0] + w * 0.22, -h * 0.74], [apex[0] + w * 0.09, -h * 0.66]])}
+          fill={AMBER_HI}
+          opacity="0.7"
+        />
+      </Paper>
     </g>
   );
 }
 
-function Cores() {
+function Cores({ uid }: { uid: string }) {
   return (
     <>
-      <g stroke={CREASE} strokeWidth="1">
-        <line x1="420" y1="228" x2="720" y2="224" />
-        <line x1="720" y1="224" x2="1040" y2="230" />
-        <line x1="420" y1="228" x2="190" y2="200" />
-        <line x1="1040" y1="230" x2="1270" y2="204" />
-      </g>
+      <path
+        d="M190 200 L420 228 L720 224 L1040 230 L1270 204"
+        stroke={CREASE_LO}
+        strokeWidth="1"
+        fill="none"
+      />
       <path
         d="M190 200 L420 228 L720 224 L1040 230 L1270 204"
         pathLength={100}
@@ -108,11 +306,13 @@ function Cores() {
         strokeWidth="1.5"
         fill="none"
       />
-      <Peak x={420} y={228} w={72} h={92} />
-      <Peak x={720} y={224} w={110} h={138} />
-      <Peak x={1040} y={230} w={84} h={104} />
-      <Pine x={330} y={230} s={0.7} />
-      <Pine x={1122} y={232} s={0.6} />
+      <Peak uid={uid} seed={101} x={420} y={228} w={72} h={92} />
+      <Peak uid={uid} seed={102} x={720} y={224} w={110} h={138} />
+      <Peak uid={uid} seed={103} x={1040} y={230} w={84} h={104} />
+      <Paper uid={uid}>
+        <Pine seed={104} x={330} y={230} s={0.7} />
+        <Pine seed={105} x={1122} y={232} s={0.6} />
+      </Paper>
       <circle cx="190" cy="200" r="2" fill="#6f6c63" opacity="0.8" />
       <circle cx="1270" cy="204" r="2" fill="#6f6c63" opacity="0.8" />
     </>
@@ -120,50 +320,64 @@ function Cores() {
 }
 
 /* ------------------------------------------------------------------ */
-/* monoliths — terraced mesas, strata pressed like folded paper        */
+/* monoliths — terraced mesas of pleated strata                        */
 /* ------------------------------------------------------------------ */
 
 function Mesa({
+  uid,
+  seed,
   x,
-  y,
   w,
   h,
   terraces = 2,
 }: {
+  uid: string;
+  seed: number;
   x: number;
-  y: number;
   w: number;
   h: number;
   terraces?: number;
 }) {
   const side = w * 0.26;
   return (
-    <g transform={`translate(${x} ${y})`}>
-      {/* front face — a slightly leaning slab of strata */}
-      <polygon
-        points={`${-w / 2},0 ${-w / 2 + 6},${-h} ${w / 2 + 4},${-h + 8} ${w / 2},0`}
-        fill={TAN}
-        stroke={CREASE}
-        strokeWidth="1"
-      />
-      {/* shadow side */}
-      <polygon
-        points={`${w / 2},0 ${w / 2 + 4},${-h + 8} ${w / 2 + 4 + side},${-h + 16} ${w / 2 + side},0`}
-        fill={KRAFT}
-      />
-      {/* sand table top */}
-      <polygon
-        points={`${-w / 2 + 6},${-h} ${w / 2 + 4},${-h + 8} ${w / 2 + 4 + side},${-h + 16} ${-w / 2 + 6 + side},${-h + 8}`}
-        fill={SAND}
-      />
-      {/* sunlit terrace edges, breathing */}
+    <g transform={`translate(${x} 0)`}>
+      <Paper uid={uid}>
+        {/* pleated front face */}
+        <Strata seed={seed} x0={-w / 2} x1={w / 2} y0={-h} y1={0} ramp={TAN_RAMP} />
+        {/* shadow side */}
+        <polygon
+          points={toPoints([
+            [w / 2, 0],
+            [w / 2 + 3, -h + 6],
+            [w / 2 + 3 + side, -h + 13],
+            [w / 2 + side, 0],
+          ])}
+          fill={KRAFT}
+        />
+        {/* sand table top */}
+        <polygon
+          points={toPoints([
+            [-w / 2 + 4, -h],
+            [w / 2 + 3, -h + 6],
+            [w / 2 + 3 + side, -h + 13],
+            [-w / 2 + 4 + side, -h + 7],
+          ])}
+          fill={SAND}
+        />
+      </Paper>
+      {/* thin sunlit terrace lips, breathing */}
       <g className="seam-breathe">
         {Array.from({ length: terraces }, (_, i) => (
           <polygon
             key={i}
-            points={`${-w * 0.42},${-h * 0.68 + i * h * 0.26} ${w * 0.44},${-h * 0.62 + i * h * 0.26} ${w * 0.44},${-h * 0.57 + i * h * 0.26} ${-w * 0.42},${-h * 0.63 + i * h * 0.26}`}
+            points={toPoints([
+              [-w * 0.42, -h * 0.68 + i * h * 0.26],
+              [w * 0.44, -h * 0.62 + i * h * 0.26],
+              [w * 0.44, -h * 0.605 + i * h * 0.26],
+              [-w * 0.42, -h * 0.665 + i * h * 0.26],
+            ])}
             fill={AMBER_HI}
-            opacity={0.6 - i * 0.16}
+            opacity={0.4 - i * 0.11}
           />
         ))}
       </g>
@@ -171,26 +385,28 @@ function Mesa({
   );
 }
 
-function MesaCluster({ x, s = 1 }: { x: number; s?: number }) {
+function MesaCluster({ uid, seed, x, s = 1 }: { uid: string; seed: number; x: number; s?: number }) {
   return (
     <g transform={`translate(${x} 268) scale(${s})`}>
-      <ellipse cx="0" cy="4" rx="130" ry="20" fill="url(#seam-halo)" />
-      <Mesa x={-62} y={0} w={44} h={64} terraces={2} />
-      <Mesa x={4} y={0} w={58} h={108} terraces={3} />
-      <Mesa x={72} y={0} w={38} h={46} terraces={1} />
-      <Pine x={-104} y={2} s={0.65} />
-      <Pine x={116} y={2} s={0.55} />
-      <line x1="-130" y1="0" x2="130" y2="0" stroke={CREASE} strokeWidth="1" />
+      <ellipse cx="0" cy="4" rx="130" ry="20" fill={`url(#halo-${uid})`} />
+      <Mesa uid={uid} seed={seed} x={-62} w={44} h={64} terraces={2} />
+      <Mesa uid={uid} seed={seed + 1} x={4} w={58} h={108} terraces={3} />
+      <Mesa uid={uid} seed={seed + 2} x={72} w={38} h={46} terraces={1} />
+      <Paper uid={uid}>
+        <Pine seed={seed + 3} x={-104} y={2} s={0.65} />
+        <Pine seed={seed + 4} x={116} y={2} s={0.55} />
+      </Paper>
+      <line x1="-130" y1="0" x2="130" y2="0" stroke={CREASE_LO} strokeWidth="1" />
     </g>
   );
 }
 
-function Monoliths() {
+function Monoliths({ uid }: { uid: string }) {
   return (
     <>
-      <MesaCluster x={300} s={0.75} />
-      <MesaCluster x={720} s={1.05} />
-      <MesaCluster x={1150} s={0.85} />
+      <MesaCluster uid={uid} seed={201} x={300} s={0.75} />
+      <MesaCluster uid={uid} seed={211} x={720} s={1.05} />
+      <MesaCluster uid={uid} seed={221} x={1150} s={0.85} />
     </>
   );
 }
@@ -199,40 +415,46 @@ function Monoliths() {
 /* terminal — a pine grove around a folded stream; a lantern blinks    */
 /* ------------------------------------------------------------------ */
 
-function Terminal() {
+function Terminal({ uid }: { uid: string }) {
   return (
     <>
       <g transform="translate(660 226)">
-        <ellipse cx="30" cy="34" rx="170" ry="24" fill="url(#seam-halo)" />
-        {/* folded ground — two paper shelves */}
-        <polygon points="-150,30 -120,4 60,-4 150,18 130,34 -120,38" fill={TAN_LIGHT} stroke={CREASE} strokeWidth="1" />
-        <polygon points="-120,4 60,-4 52,-14 -96,-8" fill={SAND} />
-        {/* the stream — a grey paper ribbon folding through */}
-        <polygon points="-64,32 -30,-6 -12,-6 -40,32" fill={GREY_LIGHT} />
-        <polygon points="-40,32 -12,-6 -2,-6 -22,32" fill={GREY} opacity="0.6" />
-        {/* the grove */}
-        <Pine x={-92} y={6} s={1.25} />
-        <Pine x={-116} y={14} s={0.85} />
-        <Pine x={26} y={-2} s={1.05} />
-        <Pine x={58} y={8} s={1.4} />
-        <Pine x={92} y={16} s={0.9} />
-        {/* paper lantern — blinks like the site's terminal caret */}
-        <g className="seam-blink" transform="translate(-4 -34)">
-          <line x1="0" y1="10" x2="0" y2="22" stroke={KRAFT_DARK} strokeWidth="1.5" />
-          <polygon points="0,-10 9,0 0,10 -9,0" fill={AMBER_HI} />
-          <polygon points="0,-10 9,0 0,0" fill={AMBER} />
+        <ellipse cx="30" cy="34" rx="170" ry="24" fill={`url(#halo-${uid})`} />
+        <Paper uid={uid}>
+          {/* folded ground — two paper shelves */}
+          <polygon points="-150,30 -120,4 60,-4 150,18 130,34 -120,38" fill={TAN_LIGHT} />
+          <polygon points="-120,4 60,-4 52,-14 -96,-8" fill={SAND} />
+          <polyline points="-120,4 60,-4" fill="none" stroke={CREASE_HI} strokeWidth="0.8" />
+          {/* the stream — a grey paper ribbon folding through */}
+          <polygon points="-64,32 -30,-6 -12,-6 -40,32" fill={GREY_LIGHT} />
+          <polygon points="-40,32 -12,-6 -2,-6 -22,32" fill={GREY} opacity="0.6" />
+          {/* the grove */}
+          <Pine seed={301} x={-92} y={6} s={1.25} />
+          <Pine seed={302} x={-116} y={14} s={0.85} />
+          <Pine seed={303} x={26} y={-2} s={1.05} />
+          <Pine seed={304} x={58} y={8} s={1.4} />
+          <Pine seed={305} x={92} y={16} s={0.9} />
+        </Paper>
+        {/* paper lantern hanging off the tall pine, blinking like the caret */}
+        <g className="seam-blink" transform="translate(34 -14)">
+          <path d="M0,14 C 2,8 6,4 12,2" fill="none" stroke={KRAFT_DARK} strokeWidth="1.2" />
+          <polygon points="0,6 7,14 0,22 -7,14" fill={AMBER_HI} />
+          <polygon points="0,6 7,14 0,14" fill={AMBER} />
+          <circle cx="0" cy="14" r="12" fill={`url(#halo-terminal)`} />
         </g>
       </g>
       {/* outlying rises so the band doesn't read empty */}
       <g transform="translate(320 244)">
-        <polygon points="-40,16 -14,-24 34,-14 44,16" fill={GREY_LIGHT} stroke={CREASE} strokeWidth="1" />
-        <polygon points="-14,-24 34,-14 8,-6" fill={GREY} opacity="0.6" />
-        <Pine x={4} y={-20} s={0.7} />
+        <Paper uid={uid}>
+          <Strata seed={311} x0={-42} x1={44} y0={-26} y1={16} ramp={GREY_RAMP} />
+          <Pine seed={312} x={4} y={-24} s={0.7} />
+        </Paper>
       </g>
       <g transform="translate(1090 240)">
-        <polygon points="-44,18 -20,-20 30,-26 48,18" fill={TAN} stroke={CREASE} strokeWidth="1" />
-        <polygon points="-20,-20 30,-26 36,-8 -8,-4" fill={TAN_LIGHT} />
-        <Pine x={16} y={-22} s={0.8} />
+        <Paper uid={uid}>
+          <Strata seed={321} x0={-46} x1={48} y0={-28} y1={18} ramp={TAN_RAMP} />
+          <Pine seed={322} x={16} y={-26} s={0.8} />
+        </Paper>
       </g>
     </>
   );
@@ -243,11 +465,13 @@ function Terminal() {
 /* ------------------------------------------------------------------ */
 
 function Crane({
+  uid,
   x,
   y,
   s = 1,
   rot = 0,
 }: {
+  uid: string;
   x: number;
   y: number;
   s?: number;
@@ -264,33 +488,40 @@ function Crane({
         fill="none"
         opacity="0.55"
       />
-      <circle cx="4" cy="0" r="26" fill="url(#seam-halo)" />
-      {/* raised wing */}
-      <polygon points="-4,-2 12,-34 22,-4" fill={TAN_LIGHT} stroke={CREASE} strokeWidth="1" />
-      {/* body fold */}
-      <polygon points="-18,2 -2,-6 26,0 4,10" fill={SAND} stroke={CREASE} strokeWidth="1" />
-      {/* tail point */}
-      <polygon points="-18,2 -36,-8 -6,-5" fill={TAN} />
-      {/* neck and head */}
-      <polygon points="26,0 44,-14 34,-1" fill={TAN} />
-      <polygon points="44,-14 51,-11 44,-8" fill={KRAFT_DARK} />
+      <circle cx="4" cy="0" r="26" fill={`url(#halo-${uid})`} />
+      <Paper uid={uid}>
+        {/* raised wing, lit face and shadow fold */}
+        <polygon points="-4,-2 12,-34 22,-4" fill={SAND} />
+        <polygon points="12,-34 22,-4 14,-8" fill={TAN_LIGHT} />
+        {/* body fold */}
+        <polygon points="-18,2 -2,-6 26,0 4,10" fill="#e9dcbd" />
+        <polygon points="-2,-6 26,0 4,10" fill={SAND} />
+        {/* tail point */}
+        <polygon points="-18,2 -36,-8 -6,-5" fill={TAN} />
+        {/* neck and head */}
+        <polygon points="26,0 44,-14 34,-1" fill={TAN} />
+        <polygon points="44,-14 51,-11 44,-8" fill={KRAFT_DARK} />
+        {/* wing crease */}
+        <polyline points="-4,-2 12,-34" fill="none" stroke={CREASE_HI} strokeWidth="0.8" />
+        <polyline points="-2,-6 4,10" fill="none" stroke={CREASE_LO} strokeWidth="0.8" />
+      </Paper>
     </g>
   );
 }
 
-function Planes() {
+function Planes({ uid }: { uid: string }) {
   return (
     <>
-      <Crane x={520} y={168} s={1.1} rot={-7} />
-      <Crane x={880} y={226} s={0.85} rot={5} />
-      <Crane x={1190} y={140} s={0.65} rot={-4} />
+      <Crane uid={uid} x={520} y={168} s={1.1} rot={-7} />
+      <Crane uid={uid} x={880} y={226} s={0.85} rot={5} />
+      <Crane uid={uid} x={1190} y={140} s={0.65} rot={-4} />
     </>
   );
 }
 
 /* ------------------------------------------------------------------ */
 
-const CENTERPIECES: Record<Variant, () => React.ReactNode> = {
+const CENTERPIECES: Record<Variant, (props: { uid: string }) => React.ReactNode> = {
   cores: Cores,
   monoliths: Monoliths,
   terminal: Terminal,
@@ -346,16 +577,11 @@ export function SectionSeam({
         </svg>
       </div>
 
-      {/* near plane — this seam's folded centerpiece */}
+      {/* near plane — this seam's folded-paper centerpiece */}
       <div data-parallax="8" className="absolute -inset-y-10 inset-x-0">
         <svg className="h-full w-full" viewBox="0 0 1440 320" preserveAspectRatio="xMidYMid slice">
-          <defs>
-            <radialGradient id="seam-halo">
-              <stop offset="0" stopColor={AMBER} stopOpacity="0.3" />
-              <stop offset="1" stopColor={AMBER} stopOpacity="0" />
-            </radialGradient>
-          </defs>
-          <Piece />
+          <PaperDefs uid={variant} seed={7} scale={2.6} />
+          <Piece uid={variant} />
         </svg>
       </div>
     </div>
