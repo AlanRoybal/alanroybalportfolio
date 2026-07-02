@@ -1,17 +1,19 @@
 /**
  * Section seams — four unique full-bleed transitions, one per joint, all in
- * the same low-poly faceted style but built from the site's own world (no
- * borrowed imagery). Each seam is a deep-ink band with the constellation on
- * a far parallax plane and a faceted centerpiece cluster on the near plane:
+ * the same origami-cliffside style as the side gutters (folded paper facets:
+ * a lit face, a shadow face, a crease). Each seam is a recessed paper band
+ * with faint ridgelines on a far parallax plane and a folded centerpiece
+ * scene on the near plane:
  *
- *   `cores`     — hero → about: the signal made solid. Three faceted neural
- *                 cores with glowing amber hearts, linked; a pulse fires
- *                 along the link route.
- *   `monoliths` — about → experience: production systems. Angular server
- *                 monoliths with amber status windows, breathing.
- *   `terminal`  — experience → projects: an extruded prompt chevron and a
- *                 blinking amber cursor block, foreshadowing the spec cards.
- *   `planes`    — projects → contact: folded ink darts gliding out on amber
+ *   `cores`     — hero → about: faceted peaks on a ridgeline; the signal
+ *                 pulse travels the trail between them (the one amber thread
+ *                 through the landscape).
+ *   `monoliths` — about → experience: terraced mesas, strata stacked like
+ *                 pressed paper, their sunlit terrace edges breathing.
+ *   `terminal`  — experience → projects: an origami pine grove around a
+ *                 folded grey stream, a paper lantern blinking like the
+ *                 site's terminal caret.
+ *   `planes`    — projects → contact: paper cranes gliding out on amber
  *                 signal trails. The page starts saying goodbye.
  *
  * `prev`/`next` name the adjoining sections' surface colours so the band
@@ -28,52 +30,63 @@ const TONES: Record<Tone, string> = {
   tint: "#efeadd", // --surface-0
 };
 
-// far-plane constellation — the connective tissue behind every seam
-const FAR_NODES: [number, number][] = [
-  [140, 150], [300, 70], [480, 140], [640, 60], [820, 120], [1000, 50],
-  [1180, 110], [1340, 60],
-];
-const FAR_LINKS: [number, number][] = [
-  [0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7],
+/* the origami-cliff paper ramp (shared with EdgeDepth) */
+const KRAFT_DARK = "#5c4530";
+const KRAFT = "#7d5e41";
+const TAN = "#a5805a";
+const TAN_LIGHT = "#c6a37b";
+const SAND = "#dcc6a2";
+const GREY = "#b9b5a7";
+const GREY_LIGHT = "#d5d1c3";
+const AMBER = "#b97d22";
+const AMBER_HI = "#e9a23b";
+const CREASE = "rgba(46,34,20,0.2)";
+
+// far-plane ridgelines — the horizon behind every seam
+const FAR_RIDGES = [
+  "M-20 150 L120 92 L230 138 L360 70 L470 126 L610 84 L730 128 L880 76 L1010 122 L1150 88 L1290 130 L1460 96",
+  "M-20 196 L160 150 L330 188 L520 140 L700 182 L900 144 L1090 180 L1280 148 L1460 178",
 ];
 
 const READOUTS: Record<Variant, [string, string]> = {
-  cores: ["sig ▸ 0.97", "link · stable"],
-  monoliths: ["uptime 99.98", "load · nominal"],
-  terminal: ["zsh · 3 jobs", "tty ▸ live"],
-  planes: ["ack ▸ sent", "inbox · open"],
+  cores: ["alt ▸ 2,130 m", "ridge · clear"],
+  monoliths: ["strata 04/04", "erosion · slow"],
+  terminal: ["grove · 3 pines", "wind ▸ 2 kt"],
+  planes: ["migration ▸ south", "sky · open"],
 };
 
-const EDGE = "rgba(28,24,16,0.16)";
-
 /* ------------------------------------------------------------------ */
-/* cores — faceted neural polyhedra with amber hearts                  */
+/* shared mark — the origami pine (three fold tiers, lit/shadow split) */
 /* ------------------------------------------------------------------ */
 
-function Core({ x, y, r }: { x: number; y: number; r: number }) {
-  const h = 0.866 * r;
+function Pine({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`}>
+      <rect x="-2" y="0" width="4" height="6" fill="#4a3624" />
+      <polygon points="-16,0 0,-14 0,0" fill="#7a5a3d" />
+      <polygon points="0,-14 16,0 0,0" fill={KRAFT_DARK} />
+      <polygon points="-12,-8 0,-20 0,-8" fill="#7a5a3d" />
+      <polygon points="0,-20 12,-8 0,-8" fill={KRAFT_DARK} />
+      <polygon points="-8,-16 0,-28 0,-16" fill="#7a5a3d" />
+      <polygon points="0,-28 8,-16 0,-16" fill={KRAFT_DARK} />
+    </g>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* cores — faceted peaks; the signal pulse walks the ridge trail       */
+/* ------------------------------------------------------------------ */
+
+function Peak({ x, y, w, h }: { x: number; y: number; w: number; h: number }) {
   return (
     <g transform={`translate(${x} ${y})`} className="seam-breathe">
-      <circle r={r * 2.1} fill="url(#seam-halo)" />
-      <polygon
-        points={`0,${-r} ${h},${-r / 2} ${h},${r / 2} 0,${r} ${-h},${r / 2} ${-h},${-r / 2}`}
-        fill="#e5decb"
-        stroke={EDGE}
-        strokeWidth="1"
-      />
-      <polygon points={`0,${-r} ${h},${-r / 2} 0,0`} fill="#ede8da" />
-      <polygon points={`0,${-r} ${-h},${-r / 2} 0,0`} fill="#dcd3bd" />
-      <polygon points={`${h},${r / 2} 0,${r} 0,0`} fill="#d7ceb7" />
-      <polygon
-        points={`0,${-0.45 * r} ${0.4 * r},${0.25 * r} ${-0.4 * r},${0.25 * r}`}
-        fill="#b97d22"
-        opacity="0.9"
-      />
-      <polygon
-        points={`0,${-0.45 * r} ${0.4 * r},${0.25 * r} 0,${0.35 * r}`}
-        fill="#e9a23b"
-        opacity="0.5"
-      />
+      <circle r={w * 1.4} cy={-h * 0.4} fill="url(#seam-halo)" />
+      <polygon points={`${-w},0 0,${-h} 0,0`} fill={TAN_LIGHT} stroke={CREASE} strokeWidth="1" />
+      <polygon points={`0,${-h} ${w},0 0,0`} fill={TAN} stroke={CREASE} strokeWidth="1" />
+      {/* sand cap catching the light */}
+      <polygon points={`${-w * 0.28},${-h * 0.72} 0,${-h} ${w * 0.24},${-h * 0.76} 0,${-h * 0.62}`} fill={SAND} />
+      {/* alpenglow crease — the one amber facet */}
+      <polygon points={`0,${-h} ${w * 0.24},${-h * 0.76} ${w * 0.1},${-h * 0.66}`} fill={AMBER_HI} opacity="0.7" />
     </g>
   );
 }
@@ -81,75 +94,76 @@ function Core({ x, y, r }: { x: number; y: number; r: number }) {
 function Cores() {
   return (
     <>
-      <g stroke="#b5a888" strokeWidth="1">
-        <line x1="420" y1="212" x2="720" y2="182" />
-        <line x1="720" y1="182" x2="1040" y2="216" />
-        <line x1="420" y1="212" x2="190" y2="150" />
-        <line x1="1040" y1="216" x2="1270" y2="160" />
+      <g stroke={CREASE} strokeWidth="1">
+        <line x1="420" y1="228" x2="720" y2="224" />
+        <line x1="720" y1="224" x2="1040" y2="230" />
+        <line x1="420" y1="228" x2="190" y2="200" />
+        <line x1="1040" y1="230" x2="1270" y2="204" />
       </g>
       <path
-        d="M190 150 L420 212 L720 182 L1040 216 L1270 160"
+        d="M190 200 L420 228 L720 224 L1040 230 L1270 204"
         pathLength={100}
         className="seam-signal"
-        stroke="#b97d22"
+        stroke={AMBER}
         strokeWidth="1.5"
         fill="none"
       />
-      <Core x={420} y={212} r={26} />
-      <Core x={720} y={182} r={40} />
-      <Core x={1040} y={216} r={30} />
-      <circle cx="190" cy="150" r="2" fill="#6f6c63" opacity="0.8" />
-      <circle cx="1270" cy="160" r="2" fill="#6f6c63" opacity="0.8" />
+      <Peak x={420} y={228} w={72} h={92} />
+      <Peak x={720} y={224} w={110} h={138} />
+      <Peak x={1040} y={230} w={84} h={104} />
+      <Pine x={330} y={230} s={0.7} />
+      <Pine x={1122} y={232} s={0.6} />
+      <circle cx="190" cy="200" r="2" fill="#6f6c63" opacity="0.8" />
+      <circle cx="1270" cy="204" r="2" fill="#6f6c63" opacity="0.8" />
     </>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* monoliths — angular server slabs with amber status windows          */
+/* monoliths — terraced mesas, strata pressed like folded paper        */
 /* ------------------------------------------------------------------ */
 
-function Slab({
+function Mesa({
   x,
   y,
   w,
   h,
-  windows = 2,
+  terraces = 2,
 }: {
   x: number;
   y: number;
   w: number;
   h: number;
-  windows?: number;
+  terraces?: number;
 }) {
-  const lean = w * 0.18;
-  const side = w * 0.28;
+  const side = w * 0.26;
   return (
     <g transform={`translate(${x} ${y})`}>
-      {/* front face, leaning slightly like a cut slab */}
+      {/* front face — a slightly leaning slab of strata */}
       <polygon
-        points={`${-w / 2},0 ${-w / 2 + lean},${-h} ${w / 2 + lean},${-h + w * 0.2} ${w / 2},0`}
-        fill="#e5decb"
-        stroke={EDGE}
+        points={`${-w / 2},0 ${-w / 2 + 6},${-h} ${w / 2 + 4},${-h + 8} ${w / 2},0`}
+        fill={TAN}
+        stroke={CREASE}
         strokeWidth="1"
       />
-      {/* side face */}
+      {/* shadow side */}
       <polygon
-        points={`${w / 2},0 ${w / 2 + lean},${-h + w * 0.2} ${w / 2 + lean + side},${-h + w * 0.34} ${w / 2 + side},0`}
-        fill="#d3c9b1"
+        points={`${w / 2},0 ${w / 2 + 4},${-h + 8} ${w / 2 + 4 + side},${-h + 16} ${w / 2 + side},0`}
+        fill={KRAFT}
       />
-      {/* top facet */}
+      {/* sand table top */}
       <polygon
-        points={`${-w / 2 + lean},${-h} ${w / 2 + lean},${-h + w * 0.2} ${w / 2 + lean + side},${-h + w * 0.34} ${-w / 2 + lean + side},${-h + w * 0.14}`}
-        fill="#f5f2e9"
+        points={`${-w / 2 + 6},${-h} ${w / 2 + 4},${-h + 8} ${w / 2 + 4 + side},${-h + 16} ${-w / 2 + 6 + side},${-h + 8}`}
+        fill={SAND}
       />
-      {/* amber status windows */}
+      {/* sunlit terrace edges, breathing */}
       <g className="seam-breathe">
-        {Array.from({ length: windows }, (_, i) => (
+        {Array.from({ length: terraces }, (_, i) => (
           <polygon
             key={i}
-            points={`${-w * 0.22},${-h * 0.72 + i * h * 0.22} ${w * 0.26},${-h * 0.66 + i * h * 0.22} ${w * 0.26},${-h * 0.6 + i * h * 0.22} ${-w * 0.22},${-h * 0.66 + i * h * 0.22}`}
-            fill="#b97d22"
-            opacity={0.75 - i * 0.2}
+            points={`${-w * 0.42},${-h * 0.68 + i * h * 0.26} ${w * 0.44},${-h * 0.62 + i * h * 0.26} ${w * 0.44},${-h * 0.57 + i * h * 0.26} ${-w * 0.42},${-h * 0.63 + i * h * 0.26}`}
+            fill={AMBER_HI}
+            opacity={0.6 - i * 0.16}
           />
         ))}
       </g>
@@ -157,14 +171,16 @@ function Slab({
   );
 }
 
-function MonolithCluster({ x, s = 1 }: { x: number; s?: number }) {
+function MesaCluster({ x, s = 1 }: { x: number; s?: number }) {
   return (
     <g transform={`translate(${x} 268) scale(${s})`}>
       <ellipse cx="0" cy="4" rx="130" ry="20" fill="url(#seam-halo)" />
-      <Slab x={-58} y={0} w={34} h={78} windows={2} />
-      <Slab x={0} y={0} w={44} h={128} windows={3} />
-      <Slab x={62} y={0} w={30} h={58} windows={1} />
-      <line x1="-120" y1="0" x2="120" y2="0" stroke="#c8bda2" strokeWidth="1" />
+      <Mesa x={-62} y={0} w={44} h={64} terraces={2} />
+      <Mesa x={4} y={0} w={58} h={108} terraces={3} />
+      <Mesa x={72} y={0} w={38} h={46} terraces={1} />
+      <Pine x={-104} y={2} s={0.65} />
+      <Pine x={116} y={2} s={0.55} />
+      <line x1="-130" y1="0" x2="130" y2="0" stroke={CREASE} strokeWidth="1" />
     </g>
   );
 }
@@ -172,59 +188,61 @@ function MonolithCluster({ x, s = 1 }: { x: number; s?: number }) {
 function Monoliths() {
   return (
     <>
-      <MonolithCluster x={300} s={0.75} />
-      <MonolithCluster x={720} s={1.05} />
-      <MonolithCluster x={1150} s={0.85} />
+      <MesaCluster x={300} s={0.75} />
+      <MesaCluster x={720} s={1.05} />
+      <MesaCluster x={1150} s={0.85} />
     </>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* terminal — extruded prompt chevron + blinking amber cursor block    */
+/* terminal — a pine grove around a folded stream; a lantern blinks    */
 /* ------------------------------------------------------------------ */
-
-function Keycap({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
-  return (
-    <g transform={`translate(${x} ${y}) scale(${s})`}>
-      <ellipse cx="8" cy="30" rx="70" ry="14" fill="url(#seam-halo)" />
-      <polygon points="-28,-20 36,-20 46,-30 -18,-30" fill="#f5f2e9" />
-      <polygon points="36,-20 46,-30 46,16 36,26" fill="#d7ceb7" />
-      <polygon points="-28,-20 36,-20 36,26 -28,26" fill="#e5decb" stroke={EDGE} strokeWidth="1" />
-      <polygon points="-10,-2 18,-2 18,8 -10,8" fill="#8a5c14" opacity="0.5" />
-    </g>
-  );
-}
 
 function Terminal() {
   return (
     <>
-      <g transform="translate(660 200)">
-        <ellipse cx="50" cy="66" rx="150" ry="22" fill="url(#seam-halo)" />
-        {/* extruded chevron ❯ */}
-        <g stroke={EDGE} strokeWidth="1">
-          <polygon points="0,-56 40,-22 40,-4 0,-38" fill="#ede8da" />
-          <polygon points="0,-38 40,-4 40,14 0,-20" fill="#dcd3bd" />
-          <polygon points="40,-22 40,-4 0,30 0,12" fill="#eae4d4" />
-          <polygon points="0,12 40,-4 40,14 0,30" fill="#d7ceb7" />
-        </g>
-        {/* cursor block — front, top and side faces, blinking */}
-        <g className="seam-blink" transform="translate(72 -46)">
-          <polygon points="0,0 12,-10 40,-10 28,0" fill="#e9a23b" />
-          <polygon points="28,0 40,-10 40,96 28,106" fill="#8a5c14" />
-          <rect x="0" y="0" width="28" height="106" fill="#b97d22" />
+      <g transform="translate(660 226)">
+        <ellipse cx="30" cy="34" rx="170" ry="24" fill="url(#seam-halo)" />
+        {/* folded ground — two paper shelves */}
+        <polygon points="-150,30 -120,4 60,-4 150,18 130,34 -120,38" fill={TAN_LIGHT} stroke={CREASE} strokeWidth="1" />
+        <polygon points="-120,4 60,-4 52,-14 -96,-8" fill={SAND} />
+        {/* the stream — a grey paper ribbon folding through */}
+        <polygon points="-64,32 -30,-6 -12,-6 -40,32" fill={GREY_LIGHT} />
+        <polygon points="-40,32 -12,-6 -2,-6 -22,32" fill={GREY} opacity="0.6" />
+        {/* the grove */}
+        <Pine x={-92} y={6} s={1.25} />
+        <Pine x={-116} y={14} s={0.85} />
+        <Pine x={26} y={-2} s={1.05} />
+        <Pine x={58} y={8} s={1.4} />
+        <Pine x={92} y={16} s={0.9} />
+        {/* paper lantern — blinks like the site's terminal caret */}
+        <g className="seam-blink" transform="translate(-4 -34)">
+          <line x1="0" y1="10" x2="0" y2="22" stroke={KRAFT_DARK} strokeWidth="1.5" />
+          <polygon points="0,-10 9,0 0,10 -9,0" fill={AMBER_HI} />
+          <polygon points="0,-10 9,0 0,0" fill={AMBER} />
         </g>
       </g>
-      <Keycap x={340} y={230} s={0.9} />
-      <Keycap x={1080} y={224} s={1.05} />
+      {/* outlying rises so the band doesn't read empty */}
+      <g transform="translate(320 244)">
+        <polygon points="-40,16 -14,-24 34,-14 44,16" fill={GREY_LIGHT} stroke={CREASE} strokeWidth="1" />
+        <polygon points="-14,-24 34,-14 8,-6" fill={GREY} opacity="0.6" />
+        <Pine x={4} y={-20} s={0.7} />
+      </g>
+      <g transform="translate(1090 240)">
+        <polygon points="-44,18 -20,-20 30,-26 48,18" fill={TAN} stroke={CREASE} strokeWidth="1" />
+        <polygon points="-20,-20 30,-26 36,-8 -8,-4" fill={TAN_LIGHT} />
+        <Pine x={16} y={-22} s={0.8} />
+      </g>
     </>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* planes — folded ink darts gliding out on amber signal trails        */
+/* planes — paper cranes gliding out on amber signal trails            */
 /* ------------------------------------------------------------------ */
 
-function Dart({
+function Crane({
   x,
   y,
   s = 1,
@@ -239,22 +257,23 @@ function Dart({
     <g transform={`translate(${x} ${y}) rotate(${rot}) scale(${s})`}>
       {/* trail streaming off the tail */}
       <path
-        d="M-74 -4 C -130 6, -180 -14, -238 -2"
+        d="M-34 2 C -90 12, -140 -8, -198 4"
         className="seam-drift"
-        stroke="#b97d22"
+        stroke={AMBER}
         strokeWidth="1.5"
         fill="none"
         opacity="0.55"
       />
       <circle cx="4" cy="0" r="26" fill="url(#seam-halo)" />
-      {/* upper wing */}
-      <polygon points="0,0 -76,-30 -34,-3" fill="#f1ede1" stroke={EDGE} strokeWidth="1" />
-      {/* lower wing */}
-      <polygon points="0,0 -70,26 -30,5" fill="#d7ceb7" stroke={EDGE} strokeWidth="1" />
-      {/* fuselage fold */}
-      <polygon points="0,0 -34,-3 -30,5" fill="#c8bda2" />
-      {/* nose catching the signal */}
-      <polygon points="0,0 -12,-2 -11,2" fill="#b97d22" opacity="0.9" />
+      {/* raised wing */}
+      <polygon points="-4,-2 12,-34 22,-4" fill={TAN_LIGHT} stroke={CREASE} strokeWidth="1" />
+      {/* body fold */}
+      <polygon points="-18,2 -2,-6 26,0 4,10" fill={SAND} stroke={CREASE} strokeWidth="1" />
+      {/* tail point */}
+      <polygon points="-18,2 -36,-8 -6,-5" fill={TAN} />
+      {/* neck and head */}
+      <polygon points="26,0 44,-14 34,-1" fill={TAN} />
+      <polygon points="44,-14 51,-11 44,-8" fill={KRAFT_DARK} />
     </g>
   );
 }
@@ -262,9 +281,9 @@ function Dart({
 function Planes() {
   return (
     <>
-      <Dart x={520} y={168} s={1.1} rot={-7} />
-      <Dart x={880} y={226} s={0.85} rot={5} />
-      <Dart x={1190} y={140} s={0.65} rot={-4} />
+      <Crane x={520} y={168} s={1.1} rot={-7} />
+      <Crane x={880} y={226} s={0.85} rot={5} />
+      <Crane x={1190} y={140} s={0.65} rot={-4} />
     </>
   );
 }
@@ -306,24 +325,19 @@ export function SectionSeam({
         }}
       />
 
-      {/* far plane — dim constellation, honeycomb outlines, mono readouts */}
+      {/* far plane — hazy ridgelines, a few stars, mono field notes */}
       <div data-parallax="18" className="absolute -inset-y-10 inset-x-0">
         <svg className="h-full w-full" viewBox="0 0 1440 320" preserveAspectRatio="xMidYMid slice">
-          <g stroke="#c8bda2" strokeWidth="1">
-            {FAR_LINKS.map(([a, b]) => (
-              <line
-                key={`${a}-${b}`}
-                x1={FAR_NODES[a][0]} y1={FAR_NODES[a][1]}
-                x2={FAR_NODES[b][0]} y2={FAR_NODES[b][1]}
-              />
+          <g stroke={GREY} strokeWidth="1" fill="none" opacity="0.55">
+            {FAR_RIDGES.map((d) => (
+              <path key={d} d={d} />
             ))}
           </g>
-          {FAR_NODES.map(([x, y], i) => (
-            <circle key={i} cx={x} cy={y} r="1.6" fill="#6f6c63" opacity="0.7" />
-          ))}
-          <g stroke="#16181b" strokeOpacity="0.1" fill="none" strokeWidth="1">
-            <path d="M170 236 217 263v54l-47 27-47-27v-54Z" />
-            <path d="M1290 210l30 17v34l-30 17-30-17v-34Z" />
+          <g fill="#6f6c63" opacity="0.6">
+            <circle cx="260" cy="60" r="1.6" />
+            <circle cx="640" cy="44" r="1.4" />
+            <circle cx="980" cy="66" r="1.6" />
+            <circle cx="1310" cy="50" r="1.4" />
           </g>
           <g fill="#5d5a50" fillOpacity="0.34" fontFamily="ui-monospace,monospace" fontSize="11" letterSpacing="2">
             <text x="384" y="272">{readL}</text>
@@ -332,13 +346,13 @@ export function SectionSeam({
         </svg>
       </div>
 
-      {/* near plane — this seam's faceted centerpiece */}
+      {/* near plane — this seam's folded centerpiece */}
       <div data-parallax="8" className="absolute -inset-y-10 inset-x-0">
         <svg className="h-full w-full" viewBox="0 0 1440 320" preserveAspectRatio="xMidYMid slice">
           <defs>
             <radialGradient id="seam-halo">
-              <stop offset="0" stopColor="#b97d22" stopOpacity="0.35" />
-              <stop offset="1" stopColor="#b97d22" stopOpacity="0" />
+              <stop offset="0" stopColor={AMBER} stopOpacity="0.3" />
+              <stop offset="1" stopColor={AMBER} stopOpacity="0" />
             </radialGradient>
           </defs>
           <Piece />

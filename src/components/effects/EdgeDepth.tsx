@@ -3,11 +3,12 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Flanking depth layers — the page's side gutters, populated. Three planes of
- * low-poly faceted objects per side (neural cores far, honeycomb pillars mid,
- * chip dies and ink shards near — the same faceted style as the seam
- * centerpieces) scroll at different speeds and fade toward the centre, so the
- * margins recede and the eye is pulled into the lit middle column.
+ * Flanking depth layers — the page's side gutters as an origami cliffside.
+ * Three planes per side scroll at different speeds, modelled on a folded-paper
+ * diorama: hazy grey ridgelines far away, tan strata terraces in the middle
+ * distance, and dark kraft crags with origami pines up close. Everything is
+ * faceted paper — a lit face, a shadow face, a crease — in the site's warm
+ * paper ramp, with a rare amber spark for continuity with the signal accent.
  *
  * Everything is a repeating SVG tile moved by a wrapped translateY (composited,
  * no repaint). Desktop-only (the gutters don't exist below lg); under
@@ -16,62 +17,87 @@ import { useEffect, useRef } from "react";
 
 const svg = (s: string) => `url("data:image/svg+xml,${encodeURIComponent(s)}")`;
 
-const EDGE = "rgba(28,24,16,0.16)";
+/* the origami-cliff paper ramp (sampled from the diorama reference) */
+const KRAFT_DARK = "#5c4530";
+const KRAFT = "#7d5e41";
+const TAN = "#a5805a";
+const TAN_LIGHT = "#c6a37b";
+const SAND = "#dcc6a2";
+const GREY = "#b9b5a7";
+const GREY_LIGHT = "#d5d1c3";
+const AMBER = "#b97d22";
+const CREASE = "rgba(46,34,20,0.2)";
 
-// far plane — a small faceted neural core and a drifting ink shard
+/**
+ * The signature mark: an origami pine — three stacked fold tiers, each split
+ * into a lit half and a shadow half, on a stub trunk. `s` scales, `tone`
+ * swaps the paper (kraft up close, grey in the haze).
+ */
+const pine = (x: number, y: number, s: number, tone: "kraft" | "grey" = "kraft") => {
+  const lit = tone === "kraft" ? "#7a5a3d" : GREY;
+  const shadow = tone === "kraft" ? KRAFT_DARK : "#a19d8f";
+  const trunk = tone === "kraft" ? "#4a3624" : "#8f8b7e";
+  return (
+    `<g transform='translate(${x} ${y}) scale(${s})'>` +
+    `<rect x='-2' y='0' width='4' height='6' fill='${trunk}'/>` +
+    `<polygon points='-16,0 0,-14 0,0' fill='${lit}'/>` +
+    `<polygon points='0,-14 16,0 0,0' fill='${shadow}'/>` +
+    `<polygon points='-12,-8 0,-20 0,-8' fill='${lit}'/>` +
+    `<polygon points='0,-20 12,-8 0,-8' fill='${shadow}'/>` +
+    `<polygon points='-8,-16 0,-28 0,-16' fill='${lit}'/>` +
+    `<polygon points='0,-28 8,-16 0,-16' fill='${shadow}'/>` +
+    `</g>`
+  );
+};
+
+// far plane — pale ridgelines dissolving into the paper haze
 const FAR = svg(
   `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='420'>` +
-    `<g transform='translate(60 90)'>` +
-    `<polygon points='0,-20 17,-10 17,10 0,20 -17,10 -17,-10' fill='#d7ceb7' stroke='${EDGE}'/>` +
-    `<polygon points='0,-20 17,-10 0,0' fill='#e1d9c6'/>` +
-    `<polygon points='17,10 0,20 0,0' fill='#cfc5ac'/>` +
-    `<polygon points='0,-8 7,4 -7,4' fill='#8a5c14' opacity='0.5'/>` +
-    `</g>` +
-    `<g transform='translate(150 300)'>` +
-    `<polygon points='0,-16 10,8 -8,10' fill='#dcd3bd' stroke='${EDGE}'/>` +
-    `<polygon points='0,-16 10,8 2,-2' fill='#e8e1d0'/>` +
-    `</g>` +
-    `<circle cx='40' cy='230' r='1.5' fill='#b97d22' opacity='0.45'/>` +
+    `<polygon points='0,120 34,64 58,92 96,36 134,84 166,58 200,104 200,150 0,150' fill='${GREY_LIGHT}'/>` +
+    `<polygon points='96,36 134,84 112,96 78,60' fill='${GREY}' opacity='0.5'/>` +
+    pine(150, 300, 0.55, "grey") +
+    pine(38, 236, 0.45, "grey") +
     `</svg>`,
 );
 
-// mid plane — a faceted hex column (honeycomb pillar) and a shard pair
+// mid plane — a folded strata terrace (the crumpled shelves of the cliff face)
 const MID = svg(
   `<svg xmlns='http://www.w3.org/2000/svg' width='220' height='520'>` +
-    `<g transform='translate(70 150)'>` +
-    `<polygon points='0,-55 18,-45 18,45 0,55 -18,45 -18,-45' fill='#ded6c1' stroke='${EDGE}'/>` +
-    `<polygon points='0,-55 18,-45 6,-38 -12,-48' fill='#ede8da'/>` +
-    `<polygon points='18,-45 18,45 8,50 8,-40' fill='#d3c9b1'/>` +
-    `<polygon points='-4,-18 4,-16 4,18 -4,16' fill='#8a5c14' opacity='0.45'/>` +
+    `<g transform='translate(64 150)'>` +
+    `<polygon points='-44,64 -48,-12 -22,-48 26,-54 48,-16 44,64' fill='${TAN}' stroke='${CREASE}'/>` +
+    `<polygon points='26,-54 48,-16 44,64 24,64' fill='${KRAFT}' opacity='0.45'/>` +
+    `<polygon points='-48,-12 48,-16 48,-7 -48,-3' fill='${SAND}'/>` +
+    `<polygon points='-44,16 44,10 44,19 -44,25' fill='${TAN_LIGHT}'/>` +
+    `<polygon points='-42,38 42,34 42,42 -42,46' fill='${SAND}' opacity='0.7'/>` +
     `</g>` +
-    `<g transform='translate(160 390)'>` +
-    `<polygon points='0,-24 14,10 -12,14' fill='#e5decb' stroke='${EDGE}'/>` +
-    `<polygon points='0,-24 14,10 4,-4' fill='#efeadd'/>` +
-    `<polygon points='-24,4 -8,20 -26,26' fill='#dcd3bd'/>` +
+    pine(64, 96, 0.75) +
+    pine(36, 106, 0.55) +
+    `<g transform='translate(160 396)'>` +
+    `<polygon points='0,-26 20,10 -16,14' fill='${GREY}' stroke='${CREASE}'/>` +
+    `<polygon points='0,-26 20,10 4,-2' fill='${GREY_LIGHT}'/>` +
     `</g>` +
-    `<circle cx='50' cy='300' r='1.8' fill='#b97d22' opacity='0.5'/>` +
     `</svg>`,
 );
 
-// near plane — a faceted chip die with pins and a large shard cluster
+// near plane — a dark kraft crag crowned with origami pines
 const NEAR = svg(
   `<svg xmlns='http://www.w3.org/2000/svg' width='240' height='620'>` +
-    `<g transform='translate(85 170)'>` +
-    `<polygon points='0,-34 34,0 0,34 -34,0' fill='#e5decb' stroke='${EDGE}'/>` +
-    `<polygon points='0,-34 34,0 0,0' fill='#f1ede1'/>` +
-    `<polygon points='0,34 -34,0 0,0' fill='#d7ceb7'/>` +
-    `<polygon points='0,-11 11,0 0,11 -11,0' fill='#b97d22' opacity='0.8'/>` +
-    `<g stroke='#b5a888' stroke-width='1.5'>` +
-    `<path d='M0,-34 L0,-48 M34,0 L48,0 M0,34 L0,48 M-34,0 L-48,0'/>` +
+    `<g transform='translate(88 190)'>` +
+    `<polygon points='-52,72 -58,-28 -26,-62 32,-56 54,-6 48,72' fill='${KRAFT}' stroke='${CREASE}'/>` +
+    `<polygon points='-58,-28 -26,-62 32,-56 54,-6 26,-16 -30,-10' fill='${TAN}'/>` +
+    `<polygon points='32,-56 54,-6 48,72 28,72 26,-16' fill='${KRAFT_DARK}'/>` +
+    `<polygon points='-56,4 26,-2 26,6 -56,12' fill='${SAND}' opacity='0.55'/>` +
+    `<polygon points='-54,34 24,30 24,38 -54,42' fill='${TAN_LIGHT}' opacity='0.5'/>` +
     `</g>` +
+    pine(74, 122, 1.15) +
+    pine(108, 132, 0.85) +
+    pine(42, 134, 0.7) +
+    `<g transform='translate(150 470)'>` +
+    `<polygon points='-38,26 -30,-18 8,-34 34,-4 28,26' fill='${KRAFT_DARK}' stroke='${CREASE}'/>` +
+    `<polygon points='-30,-18 8,-34 34,-4 4,-10' fill='${KRAFT}'/>` +
+    pine(-6, -30, 0.8) +
     `</g>` +
-    `<g transform='translate(150 450)'>` +
-    `<polygon points='0,-40 22,16 -18,22' fill='#eae4d4' stroke='${EDGE}'/>` +
-    `<polygon points='0,-40 22,16 6,-6' fill='#f3efe5'/>` +
-    `<polygon points='-34,8 -12,30 -38,38' fill='#dcd3bd'/>` +
-    `<polygon points='0,-40 6,-6 -8,-2' fill='#8a5c14' opacity='0.4'/>` +
-    `</g>` +
-    `<circle cx='60' cy='560' r='2' fill='#b97d22' opacity='0.55'/>` +
+    `<circle cx='60' cy='560' r='2' fill='${AMBER}' opacity='0.55'/>` +
     `</svg>`,
 );
 
