@@ -62,6 +62,12 @@ export function ScrollCharm() {
     let dim = 1; // eased activity multiplier (1 scrolling → IDLE_DIM at rest)
     let lastScrollAt = 0;
     let lastS = -1;
+    // the landing is a one-shot: hitstop → burst → hidden, re-armed on rewind
+    let armed = true;
+    let burstDone = false;
+    let frozenUntil = 0;
+    let burstTimer = 0;
+    let noteTimer = 0;
 
     // pretext-pin the sprite's box width so varying-length frames never reflow.
     const pinWidth = () => {
@@ -153,38 +159,100 @@ export function ScrollCharm() {
       }
       lastX = x;
 
-      // wordmark resolve (0 → scrambled, 1 → resolved), completing on contact
-      const resolve =
-        s >= projBottom
-          ? smooth(clamp((s - projBottom) / Math.max(1, impactScroll - projBottom), 0, 1))
-          : 0;
-      setCharmImpact(resolve);
+      // impact gate: the wordmark stays fully scrambled until the charm LANDS —
+      // the whole flight is anticipation, the contact is the payoff
+      const impacted = s >= impactScroll;
+      setCharmImpact(impacted ? 1 : 0);
 
-      // impact envelope (jolt), centred on contact
-      const half = vh * 0.08;
-      const k = clamp((s - (impactScroll - half)) / (2 * half), 0, 1);
-      const pulse = Math.sin(k * Math.PI);
-      if (s >= projBottom) {
-        scale = 1 + pulse * 0.45;
-        opacity = 1 - smooth(clamp((k - 0.35) / 0.4, 0, 1));
+      if (impacted) {
+        if (armed) {
+          // hitstop: freeze the sprite for a beat, then it bursts into glyphs
+          armed = false;
+          frozenUntil = performance.now() + 90;
+          burstTimer = window.setTimeout(() => {
+            burstDone = true;
+            burst();
+          }, 90);
+        }
+        if (burstDone) opacity = 0; // the charm became the burst
+      } else if (!armed && s < impactScroll - vh * 0.05) {
+        // rewound above the landing — re-scramble happened, re-arm the moment
+        armed = true;
+        burstDone = false;
       }
 
       envOpacity = opacity;
       charm.style.opacity = String(envOpacity * dim);
       charm.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%) rotate(${rot}deg) scale(${facing * scale}, ${scale})`;
+    };
 
-      if (wordmark) {
-        if (pulse > 0.001) {
-          const tx = pulse * Math.sin(k * Math.PI * 9) * 7;
-          const tyy = pulse * Math.cos(k * Math.PI * 7) * 5;
-          const wr = pulse * Math.sin(k * Math.PI * 11) * 1.4;
-          wordmark.style.transform = `translate(${tx}px, ${tyy}px) rotate(${wr}deg) scale(${1 + pulse * 0.02})`;
-          wordmark.style.textShadow = `0 0 ${pulse * 26}px rgba(185,125,34,${pulse * 0.55})`;
-        } else {
-          wordmark.style.transform = "";
-          wordmark.style.textShadow = "";
-        }
+    /** The charm scatters into its own glyphs and hearts, rings echo outward,
+     *  and a mono field note stamps the delivery. */
+    const BURST_GLYPHS = ["@", "#", "%", "*", "=", "+", "~", ":"];
+    const burst = () => {
+      const yv = hitDocY - window.scrollY;
+      // echo rings — the hit propagating outward and dying off
+      for (const [size, dur, op] of [
+        [440, 620, 0.7],
+        [720, 950, 0.35],
+      ] as const) {
+        const ring = document.createElement("div");
+        ring.style.cssText = `position:fixed;left:${hitX}px;top:${yv}px;width:24px;height:24px;margin:-12px 0 0 -12px;border:1.5px solid var(--color-accent);border-radius:9999px;pointer-events:none;z-index:44;`;
+        document.body.appendChild(ring);
+        ring
+          .animate(
+            [
+              { transform: "scale(0.2)", opacity: op },
+              { transform: `scale(${size / 24})`, opacity: 0 },
+            ],
+            { duration: dur, easing: "cubic-bezier(0.16,1,0.3,1)" },
+          )
+          .addEventListener("finish", () => ring.remove());
       }
+      // glyph + heart shrapnel, fanned upward from the point of contact
+      for (let i = 0; i < 18; i++) {
+        const heart = i < 6;
+        const span = document.createElement("span");
+        span.textContent = heart ? "<3" : BURST_GLYPHS[i % BURST_GLYPHS.length];
+        span.style.cssText = `position:fixed;left:${hitX}px;top:${yv}px;z-index:45;pointer-events:none;font-family:var(--font-mono);font-weight:600;font-size:${heart ? 15 : 13}px;color:${heart ? "var(--color-accent)" : "var(--color-text)"};text-shadow:0 0 10px rgba(233,162,59,0.5);`;
+        document.body.appendChild(span);
+        const ang = -Math.PI * (0.1 + 0.8 * Math.random());
+        const dist = 50 + Math.random() * 130;
+        const dx = Math.cos(ang) * dist;
+        const dy = Math.sin(ang) * dist;
+        span
+          .animate(
+            [
+              { transform: "translate(-50%,-50%) scale(0.6) rotate(0deg)", opacity: 1 },
+              {
+                transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(${0.9 + Math.random() * 0.5}) rotate(${(Math.random() - 0.5) * 140}deg)`,
+                opacity: 0,
+              },
+            ],
+            { duration: 700 + Math.random() * 350, easing: "cubic-bezier(0.16,1,0.3,1)" },
+          )
+          .addEventListener("finish", () => span.remove());
+      }
+      // mono field note — the site's HUD voice acknowledging delivery
+      const note = document.createElement("span");
+      const msg = "sig ▸ delivered";
+      note.style.cssText = `position:fixed;left:${hitX + 26}px;top:${yv - 58}px;z-index:45;pointer-events:none;font-family:var(--font-mono);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-text-muted);`;
+      document.body.appendChild(note);
+      let ci = 0;
+      noteTimer = window.setInterval(() => {
+        ci++;
+        note.textContent = msg.slice(0, ci);
+        if (ci >= msg.length) {
+          window.clearInterval(noteTimer);
+          note
+            .animate([{ opacity: 1 }, { opacity: 0 }], {
+              duration: 600,
+              delay: 1400,
+              fill: "forwards",
+            })
+            .addEventListener("finish", () => note.remove());
+        }
+      }, 26);
     };
 
     const st = ScrollTrigger.create({
@@ -208,6 +276,11 @@ export function ScrollCharm() {
     let rafA = 0;
     const animate = (t: number) => {
       if (cancelled) return;
+      if (t < frozenUntil) {
+        // hitstop — the sprite holds its frame for a beat at contact
+        rafA = requestAnimationFrame(animate);
+        return;
+      }
       if (t - lastF >= FRAME_MS) {
         lastF = t;
         fi = (fi + 1) % charmSpriteFrames.length;
@@ -230,11 +303,9 @@ export function ScrollCharm() {
       st.kill();
       window.removeEventListener("load", onLoad);
       window.clearTimeout(settle);
+      window.clearTimeout(burstTimer);
+      window.clearInterval(noteTimer);
       setCharmImpact(0);
-      if (wordmark) {
-        wordmark.style.transform = "";
-        wordmark.style.textShadow = "";
-      }
     };
   }, []);
 
