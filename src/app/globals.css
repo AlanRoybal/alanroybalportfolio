@@ -521,6 +521,23 @@
       opacity: 0.25;
     }
   }
+  /* paper cranes bank gently side to side, with a slight rise on each roll */
+  .crane-sway {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: crane-sway 4.2s ease-in-out infinite;
+    will-change: transform;
+  }
+  @keyframes crane-sway {
+    0%,
+    100% {
+      transform: rotate(-4.5deg) translateY(2px);
+    }
+    50% {
+      transform: rotate(4.5deg) translateY(-4px);
+    }
+  }
+
   /* the darts' signal trails stream backwards */
   .seam-drift {
     stroke-dasharray: 5 11;

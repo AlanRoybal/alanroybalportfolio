@@ -199,11 +199,14 @@ function Crane({
   x,
   y,
   h,
+  sway = 0,
 }: {
   uid: string;
   x: number;
   y: number;
   h: number;
+  /** stagger offset (s) so the flock doesn't rock in unison */
+  sway?: number;
 }) {
   const w = h / AR.crane;
   return (
@@ -218,7 +221,10 @@ function Crane({
         opacity="0.55"
       />
       <circle r={h * 0.34} fill={`url(#halo-${uid})`} />
-      <Cutout uid={uid} href="/paper/crane.png" x={-w / 2} y={-h / 2} h={h} ar={AR.crane} />
+      {/* the bird banks side to side while its trail stays put */}
+      <g className="crane-sway" style={{ animationDelay: `${sway}s` }}>
+        <Cutout uid={uid} href="/paper/crane.png" x={-w / 2} y={-h / 2} h={h} ar={AR.crane} />
+      </g>
     </g>
   );
 }
@@ -227,13 +233,13 @@ function Planes({ uid }: { uid: string }) {
   return (
     <>
       <g transform="rotate(-6 520 168)">
-        <Crane uid={uid} x={520} y={168} h={104} />
+        <Crane uid={uid} x={520} y={168} h={104} sway={0} />
       </g>
       <g transform="rotate(4 880 226)">
-        <Crane uid={uid} x={880} y={226} h={80} />
+        <Crane uid={uid} x={880} y={226} h={80} sway={-1.4} />
       </g>
       <g transform="rotate(-3 1190 140)">
-        <Crane uid={uid} x={1190} y={140} h={62} />
+        <Crane uid={uid} x={1190} y={140} h={62} sway={-2.6} />
       </g>
     </>
   );
