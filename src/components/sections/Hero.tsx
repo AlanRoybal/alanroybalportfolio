@@ -16,7 +16,9 @@ export function Hero() {
       <NeuralField />
       {/* warm accent wash + bottom fade into the page */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-[14%] top-[38%] h-[64vmin] w-[64vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,var(--color-accent)_0%,transparent_70%)] opacity-[0.08] blur-3xl" />
+        <div className="absolute left-[14%] top-[38%] h-[64vmin] w-[64vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,var(--color-accent)_0%,transparent_70%)] opacity-[0.12] blur-3xl" />
+        {/* warm ground shadow — separates the ASCII portrait from the paper */}
+        <div className="absolute right-[6%] top-[46%] h-[72vmin] w-[72vmin] -translate-y-1/2 rounded-full bg-[radial-gradient(circle,#5a4a2c_0%,transparent_68%)] opacity-[0.06] blur-3xl max-lg:hidden" />
       </div>
       <div
         aria-hidden="true"

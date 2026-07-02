@@ -179,7 +179,7 @@ export function ScrollCharm() {
           const tyy = pulse * Math.cos(k * Math.PI * 7) * 5;
           const wr = pulse * Math.sin(k * Math.PI * 11) * 1.4;
           wordmark.style.transform = `translate(${tx}px, ${tyy}px) rotate(${wr}deg) scale(${1 + pulse * 0.02})`;
-          wordmark.style.textShadow = `0 0 ${pulse * 26}px rgba(255,255,255,${pulse * 0.45})`;
+          wordmark.style.textShadow = `0 0 ${pulse * 26}px rgba(185,125,34,${pulse * 0.55})`;
         } else {
           wordmark.style.transform = "";
           wordmark.style.textShadow = "";
@@ -249,7 +249,7 @@ export function ScrollCharm() {
       style={{
         fontSize: "clamp(5px, 0.72vw, 9px)",
         color: "var(--color-text-strong)",
-        textShadow: "0 0 6px rgba(255,255,255,0.16)",
+        textShadow: "0 0 6px rgba(185,125,34,0.22)",
         willChange: "transform, opacity",
       }}
     >

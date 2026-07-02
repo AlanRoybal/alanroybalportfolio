@@ -32,7 +32,7 @@ function Row({ job }: { job: ExperienceItem }) {
     <Tilt className="z-[45] rounded-[var(--radius-xl)]">
     <details
       data-reveal
-      className="group rounded-[var(--radius-xl)] border border-line bg-surface-0 p-7 md:p-8 [&_summary::-webkit-details-marker]:hidden"
+      className="lit group rounded-[var(--radius-xl)] border border-line bg-surface-0 p-7 md:p-8 [&_summary::-webkit-details-marker]:hidden"
     >
       <summary className="flex cursor-pointer list-none flex-col gap-5">
         <div className="flex items-start justify-between gap-4">

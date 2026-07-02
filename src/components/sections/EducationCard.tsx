@@ -10,7 +10,7 @@ import { Tilt } from "@/components/effects/Tilt";
 export function EducationCard() {
   return (
     <Tilt className="z-[45] rounded-[var(--radius-xl)]">
-    <details className="group rounded-[var(--radius-xl)] border border-line bg-surface-0 p-6 [&_summary::-webkit-details-marker]:hidden">
+    <details className="lit group rounded-[var(--radius-xl)] border border-line bg-surface-0 p-6 [&_summary::-webkit-details-marker]:hidden">
       <summary className="flex cursor-pointer list-none items-start justify-between gap-4">
         <div>
           <span className="label text-text-faint">education</span>

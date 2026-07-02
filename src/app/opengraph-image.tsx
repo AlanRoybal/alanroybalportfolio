@@ -16,11 +16,11 @@ export default function OpengraphImage() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "#0c0d0f",
+          background: "#f5f1e8",
           backgroundImage:
-            "radial-gradient(60% 80% at 12% 18%, rgba(233,162,59,0.16), transparent 60%)",
+            "radial-gradient(60% 80% at 12% 18%, rgba(185,125,34,0.18), transparent 60%)",
           padding: "72px 80px",
-          color: "#e7e3da",
+          color: "#2f3338",
           fontFamily: "sans-serif",
         }}
       >
@@ -30,7 +30,7 @@ export default function OpengraphImage() {
             fontSize: 26,
             letterSpacing: 6,
             textTransform: "uppercase",
-            color: "#a7a294",
+            color: "#85806f",
           }}
         >
           alanroybal.com
@@ -43,7 +43,7 @@ export default function OpengraphImage() {
               fontSize: 118,
               fontWeight: 700,
               lineHeight: 1.02,
-              color: "#f5f1e8",
+              color: "#16181b",
             }}
           >
             Alan Roybal
@@ -53,7 +53,7 @@ export default function OpengraphImage() {
               display: "flex",
               fontSize: 46,
               marginTop: 18,
-              color: "#e9a23b",
+              color: "#b97d22",
             }}
           >
             {SITE.role}
@@ -64,7 +64,7 @@ export default function OpengraphImage() {
               fontSize: 30,
               marginTop: 26,
               maxWidth: 900,
-              color: "#a7a294",
+              color: "#5d5a50",
             }}
           >
             New-grad SWE · MCP gateways · LLM evals · real-time GPU systems
@@ -76,7 +76,7 @@ export default function OpengraphImage() {
             display: "flex",
             gap: 28,
             fontSize: 24,
-            color: "#6f6c63",
+            color: "#85806f",
           }}
         >
           <span>github.com/alanroybal</span>
