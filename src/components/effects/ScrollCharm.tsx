@@ -67,7 +67,6 @@ export function ScrollCharm() {
     let burstDone = false;
     let frozenUntil = 0;
     let burstTimer = 0;
-    let noteTimer = 0;
 
     // pretext-pin the sprite's box width so varying-length frames never reflow.
     const pinWidth = () => {
@@ -233,26 +232,6 @@ export function ScrollCharm() {
           )
           .addEventListener("finish", () => span.remove());
       }
-      // mono field note — the site's HUD voice acknowledging delivery
-      const note = document.createElement("span");
-      const msg = "sig ▸ delivered";
-      note.style.cssText = `position:fixed;left:${hitX + 26}px;top:${yv - 58}px;z-index:45;pointer-events:none;font-family:var(--font-mono);font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:var(--color-text-muted);`;
-      document.body.appendChild(note);
-      let ci = 0;
-      noteTimer = window.setInterval(() => {
-        ci++;
-        note.textContent = msg.slice(0, ci);
-        if (ci >= msg.length) {
-          window.clearInterval(noteTimer);
-          note
-            .animate([{ opacity: 1 }, { opacity: 0 }], {
-              duration: 600,
-              delay: 1400,
-              fill: "forwards",
-            })
-            .addEventListener("finish", () => note.remove());
-        }
-      }, 26);
     };
 
     const st = ScrollTrigger.create({
@@ -304,7 +283,6 @@ export function ScrollCharm() {
       window.removeEventListener("load", onLoad);
       window.clearTimeout(settle);
       window.clearTimeout(burstTimer);
-      window.clearInterval(noteTimer);
       setCharmImpact(0);
     };
   }, []);
