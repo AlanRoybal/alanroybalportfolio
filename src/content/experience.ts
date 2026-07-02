@@ -25,7 +25,7 @@ export const experience: ExperienceItem[] = [
     start: "Apr 2026",
     end: "Present",
     summary:
-      "Shipped an AI platform end-to-end — ingestion to deploy — with data integrations processing 5M+ records/day for the primary enterprise customer.",
+      "Shipped an AI platform end to end, from ingestion to deploy, with data integrations processing 5M+ records/day for the primary enterprise customer.",
     metric: "5M+",
     metricLabel: "records/day ingested",
     stack: ["AI Platform", "Data Ingestion", "Full-stack"],
@@ -39,7 +39,7 @@ export const experience: ExperienceItem[] = [
     start: "May 2025",
     end: "May 2026",
     summary:
-      "Built test automation for 50+ API endpoints and a sub-50ms MCP agent, then was promoted to lead a 7-person team — lifting velocity ~25%.",
+      "Built test automation for 50+ API endpoints and a sub-50ms MCP agent, then was promoted to lead a 7-person team, lifting velocity ~25%.",
     metric: "7→15",
     metricLabel: "teams adopting AI",
     stack: ["Python", "C#", "Azure DevOps", "MCP"],
@@ -50,7 +50,7 @@ export const experience: ExperienceItem[] = [
 export const leadership: ExperienceItem[] = [
   {
     id: "hackutd",
-    company: "HackUTD — ACM",
+    company: "HackUTD · ACM",
     role: "Director",
     type: "Nonprofit",
     location: "Dallas, TX",

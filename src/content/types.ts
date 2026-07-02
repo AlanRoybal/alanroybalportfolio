@@ -1,6 +1,6 @@
 /**
  * Content model for the portfolio. The content layer is typed data, not markup,
- * so the résumé stays a single source of truth.
+ * so the resume stays a single source of truth.
  */
 
 /** A headline metric shown prominently in a project's detail view. */
@@ -19,7 +19,7 @@ export interface ProjectLink {
 export interface Project {
   id: string;
   title: string;
-  /** One-line hook — the interesting angle, not a résumé bullet. */
+  /** One-line hook: the interesting angle, not a resume bullet. */
   tagline: string;
   /** Optional accolade, e.g. "Google Gemini Developer Spotlight". */
   badge?: string;

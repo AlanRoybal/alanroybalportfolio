@@ -1,8 +1,8 @@
 import type { Project } from "./types";
 
 /**
- * Selected work — written to show the interesting engineering, not to restate
- * the résumé. Details are pulled from the real repos.
+ * Selected work, written to show the interesting engineering, not to restate
+ * the resume. Details are pulled from the real repos.
  */
 export const projects: Project[] = [
   {
@@ -25,7 +25,7 @@ export const projects: Project[] = [
       },
       {
         title: "WebSocket streaming kept in lock-step",
-        body: "Generated media stays synced to the model output, sub-400ms end to end — half the latency I started with.",
+        body: "Generated media stays synced to the model output, sub-400ms end to end, half the latency I started with.",
       },
       {
         title: "Shipped, then spotlighted",
@@ -41,7 +41,7 @@ export const projects: Project[] = [
     id: "cotty",
     title: "CoTTY",
     tagline:
-      "A real macOS shell you share over a link — everyone types into the same prompt at once, conflict-free, each with their own cursor.",
+      "A real macOS shell you share over a link. Everyone types into the same prompt at once, conflict-free, each with their own cursor.",
     status: "open source · macOS",
     stack: ["Zig", "Swift", "Metal", "CRDT", "PTY", "bore"],
     metrics: [
@@ -56,7 +56,7 @@ export const projects: Project[] = [
       },
       {
         title: "Tools run only on the host",
-        body: "Claude Code, vim, htop run in a real PTY on the host and stream to every peer — collaborators never install a thing. Raw/alt-screen modes are auto-detected.",
+        body: "Claude Code, vim, htop run in a real PTY on the host and stream to every peer, so collaborators never install a thing. Raw/alt-screen modes are auto-detected.",
       },
       {
         title: "GPU terminal + a live editor",
@@ -72,7 +72,7 @@ export const projects: Project[] = [
     id: "lyria-studio",
     title: "Lyria Studio",
     tagline:
-      "A node-graph music IDE for Google's Lyria — wire prompts, instruments and vocals into a patch, go live, and arrange what you capture.",
+      "A node-graph music IDE for Google's Lyria. Wire prompts, instruments and vocals into a patch, go live, and arrange what you capture.",
     status: "live · open source",
     stack: ["Electron", "React", "TypeScript", "Vite", "Zustand", "XY Flow", "Google GenAI"],
     metrics: [
@@ -91,7 +91,7 @@ export const projects: Project[] = [
       },
       {
         title: "Arrange and export",
-        body: "Clip splitting, volume and pitch automation lanes, and mix export to WAV — a focused desktop tool, shipped as an Electron app with tagged releases.",
+        body: "Clip splitting, volume and pitch automation lanes, and mix export to WAV. A focused desktop tool, shipped as an Electron app with tagged releases.",
       },
     ],
     links: [

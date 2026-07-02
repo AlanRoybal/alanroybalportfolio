@@ -4,7 +4,7 @@ export const profile: Profile = {
   name: "Alan Roybal",
   title: "AI & Systems Engineer",
   blurb:
-    "I build AI platforms and low-latency systems — from MCP gateways and evaluation harnesses to real-time, GPU-rendered software. Currently shipping production AI as a founding engineer.",
+    "I build AI platforms and low-latency systems, from MCP gateways and evaluation harnesses to real-time, GPU-rendered software. Currently shipping production AI as a founding engineer.",
   location: "Dallas, TX",
   email: "alanroybal05@gmail.com",
   phone: "214-742-0157",

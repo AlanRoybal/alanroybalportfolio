@@ -182,7 +182,7 @@ export function Nav() {
               onClick={() => setOpen(false)}
               className="mt-1 rounded-[var(--radius-md)] bg-accent px-4 py-3 text-center text-sm font-medium text-on-accent"
             >
-              résumé ↓
+              resume ↓
             </a>
           </nav>
         </div>

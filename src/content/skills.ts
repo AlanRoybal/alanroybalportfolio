@@ -1,6 +1,6 @@
 import type { SkillGroup } from "./types";
 
-/** Skill clusters, straight from the résumé. */
+/** Skill clusters, straight from the resume. */
 export const skillGroups: SkillGroup[] = [
   {
     id: "ai",

@@ -96,7 +96,7 @@ export function TypeReveal({
 
       mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        gsap.set(rows, { opacity: 0.14, y: 12 });
+        gsap.set(rows, { opacity: 0.32, y: 12 });
         const tl = gsap.timeline({
           scrollTrigger: {
             trigger: el,
