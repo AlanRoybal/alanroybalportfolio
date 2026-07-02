@@ -16,7 +16,7 @@ const FALLBACK = "(max-width: 767.98px), (prefers-reduced-motion: reduce)";
 
 // Per-project warm wash (rgb): amber, warm sand, deep amber — all within the
 // single-accent family so the page never picks up a second hue.
-const TINTS = ["233,162,59", "199,191,176", "185,125,34"];
+const TINTS = ["185,125,34", "111,108,99", "138,92,20"];
 const pad = (n: number) => String(n).padStart(2, "0");
 
 type Panel = { project: Project; pi: number; kind: "overview" | "showcase" };
@@ -181,7 +181,7 @@ function TerminalLightbox({
         animate={{ x: 0, y: 0, scale: 1, opacity: 1 }}
         exit={{ ...entry, opacity: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="relative flex max-h-[84vh] w-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-line bg-surface-sunken font-mono text-[length:var(--text-sm)] shadow-[0_60px_160px_-40px_rgba(0,0,0,0.9)] ring-1 ring-inset ring-line-faint"
+        className="relative flex max-h-[84vh] w-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-line bg-surface-sunken font-mono text-[length:var(--text-sm)] shadow-[0_60px_160px_-40px_rgba(70,55,30,0.45)] ring-1 ring-inset ring-line-faint"
         style={{ maxWidth: finalW }}
       >
         <div className="relative">

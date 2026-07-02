@@ -16,22 +16,22 @@ import { useEffect, useRef } from "react";
 
 const svg = (s: string) => `url("data:image/svg+xml,${encodeURIComponent(s)}")`;
 
-const EDGE = "rgba(245,241,232,0.09)";
+const EDGE = "rgba(28,24,16,0.16)";
 
 // far plane — a small faceted neural core and a drifting ink shard
 const FAR = svg(
   `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='420'>` +
     `<g transform='translate(60 90)'>` +
-    `<polygon points='0,-20 17,-10 17,10 0,20 -17,10 -17,-10' fill='#14171a' stroke='${EDGE}'/>` +
-    `<polygon points='0,-20 17,-10 0,0' fill='#1a1e22'/>` +
-    `<polygon points='17,10 0,20 0,0' fill='#101317'/>` +
-    `<polygon points='0,-8 7,4 -7,4' fill='#b97d22' opacity='0.5'/>` +
+    `<polygon points='0,-20 17,-10 17,10 0,20 -17,10 -17,-10' fill='#d7ceb7' stroke='${EDGE}'/>` +
+    `<polygon points='0,-20 17,-10 0,0' fill='#e1d9c6'/>` +
+    `<polygon points='17,10 0,20 0,0' fill='#cfc5ac'/>` +
+    `<polygon points='0,-8 7,4 -7,4' fill='#8a5c14' opacity='0.5'/>` +
     `</g>` +
     `<g transform='translate(150 300)'>` +
-    `<polygon points='0,-16 10,8 -8,10' fill='#171a1e' stroke='${EDGE}'/>` +
-    `<polygon points='0,-16 10,8 2,-2' fill='#1e2226'/>` +
+    `<polygon points='0,-16 10,8 -8,10' fill='#dcd3bd' stroke='${EDGE}'/>` +
+    `<polygon points='0,-16 10,8 2,-2' fill='#e8e1d0'/>` +
     `</g>` +
-    `<circle cx='40' cy='230' r='1.5' fill='#e9a23b' opacity='0.45'/>` +
+    `<circle cx='40' cy='230' r='1.5' fill='#b97d22' opacity='0.45'/>` +
     `</svg>`,
 );
 
@@ -39,17 +39,17 @@ const FAR = svg(
 const MID = svg(
   `<svg xmlns='http://www.w3.org/2000/svg' width='220' height='520'>` +
     `<g transform='translate(70 150)'>` +
-    `<polygon points='0,-55 18,-45 18,45 0,55 -18,45 -18,-45' fill='#181c20' stroke='${EDGE}'/>` +
-    `<polygon points='0,-55 18,-45 6,-38 -12,-48' fill='#232830'/>` +
-    `<polygon points='18,-45 18,45 8,50 8,-40' fill='#121518'/>` +
-    `<polygon points='-4,-18 4,-16 4,18 -4,16' fill='#b97d22' opacity='0.45'/>` +
+    `<polygon points='0,-55 18,-45 18,45 0,55 -18,45 -18,-45' fill='#ded6c1' stroke='${EDGE}'/>` +
+    `<polygon points='0,-55 18,-45 6,-38 -12,-48' fill='#ede8da'/>` +
+    `<polygon points='18,-45 18,45 8,50 8,-40' fill='#d3c9b1'/>` +
+    `<polygon points='-4,-18 4,-16 4,18 -4,16' fill='#8a5c14' opacity='0.45'/>` +
     `</g>` +
     `<g transform='translate(160 390)'>` +
-    `<polygon points='0,-24 14,10 -12,14' fill='#1c2024' stroke='${EDGE}'/>` +
-    `<polygon points='0,-24 14,10 4,-4' fill='#242930'/>` +
-    `<polygon points='-24,4 -8,20 -26,26' fill='#171a1e'/>` +
+    `<polygon points='0,-24 14,10 -12,14' fill='#e5decb' stroke='${EDGE}'/>` +
+    `<polygon points='0,-24 14,10 4,-4' fill='#efeadd'/>` +
+    `<polygon points='-24,4 -8,20 -26,26' fill='#dcd3bd'/>` +
     `</g>` +
-    `<circle cx='50' cy='300' r='1.8' fill='#e9a23b' opacity='0.5'/>` +
+    `<circle cx='50' cy='300' r='1.8' fill='#b97d22' opacity='0.5'/>` +
     `</svg>`,
 );
 
@@ -57,21 +57,21 @@ const MID = svg(
 const NEAR = svg(
   `<svg xmlns='http://www.w3.org/2000/svg' width='240' height='620'>` +
     `<g transform='translate(85 170)'>` +
-    `<polygon points='0,-34 34,0 0,34 -34,0' fill='#1c2024' stroke='${EDGE}'/>` +
-    `<polygon points='0,-34 34,0 0,0' fill='#262b30'/>` +
-    `<polygon points='0,34 -34,0 0,0' fill='#14171a'/>` +
-    `<polygon points='0,-11 11,0 0,11 -11,0' fill='#e9a23b' opacity='0.8'/>` +
-    `<g stroke='#3a3f44' stroke-width='1.5'>` +
+    `<polygon points='0,-34 34,0 0,34 -34,0' fill='#e5decb' stroke='${EDGE}'/>` +
+    `<polygon points='0,-34 34,0 0,0' fill='#f1ede1'/>` +
+    `<polygon points='0,34 -34,0 0,0' fill='#d7ceb7'/>` +
+    `<polygon points='0,-11 11,0 0,11 -11,0' fill='#b97d22' opacity='0.8'/>` +
+    `<g stroke='#b5a888' stroke-width='1.5'>` +
     `<path d='M0,-34 L0,-48 M34,0 L48,0 M0,34 L0,48 M-34,0 L-48,0'/>` +
     `</g>` +
     `</g>` +
     `<g transform='translate(150 450)'>` +
-    `<polygon points='0,-40 22,16 -18,22' fill='#1f2429' stroke='${EDGE}'/>` +
-    `<polygon points='0,-40 22,16 6,-6' fill='#282e34'/>` +
-    `<polygon points='-34,8 -12,30 -38,38' fill='#171a1e'/>` +
-    `<polygon points='0,-40 6,-6 -8,-2' fill='#b97d22' opacity='0.4'/>` +
+    `<polygon points='0,-40 22,16 -18,22' fill='#eae4d4' stroke='${EDGE}'/>` +
+    `<polygon points='0,-40 22,16 6,-6' fill='#f3efe5'/>` +
+    `<polygon points='-34,8 -12,30 -38,38' fill='#dcd3bd'/>` +
+    `<polygon points='0,-40 6,-6 -8,-2' fill='#8a5c14' opacity='0.4'/>` +
     `</g>` +
-    `<circle cx='60' cy='560' r='2' fill='#e9a23b' opacity='0.55'/>` +
+    `<circle cx='60' cy='560' r='2' fill='#b97d22' opacity='0.55'/>` +
     `</svg>`,
 );
 

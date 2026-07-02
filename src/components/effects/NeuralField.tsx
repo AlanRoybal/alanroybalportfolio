@@ -92,7 +92,7 @@ export function NeuralField() {
           const d2 = dx * dx + dy * dy;
           if (d2 < LINK2) {
             const o = (1 - Math.sqrt(d2) / LINK) * 0.22;
-            ctx.strokeStyle = `rgba(150,146,138,${o})`;
+            ctx.strokeStyle = `rgba(111,108,99,${o})`;
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
@@ -106,12 +106,12 @@ export function NeuralField() {
         if (n.hot) {
           ctx.beginPath();
           ctx.arc(n.x, n.y, n.r * 2.6, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(233,162,59,0.10)";
+          ctx.fillStyle = "rgba(185,125,34,0.12)";
           ctx.fill();
         }
         ctx.beginPath();
         ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
-        ctx.fillStyle = n.hot ? "rgba(233,162,59,0.9)" : "rgba(199,191,176,0.5)";
+        ctx.fillStyle = n.hot ? "rgba(185,125,34,0.9)" : "rgba(111,108,99,0.5)";
         ctx.fill();
       }
       // firing signals
@@ -123,11 +123,11 @@ export function NeuralField() {
         const y = a.y + (b.y - a.y) * p.t;
         ctx.beginPath();
         ctx.arc(x, y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(244,184,96,0.16)";
+        ctx.fillStyle = "rgba(185,125,34,0.18)";
         ctx.fill();
         ctx.beginPath();
         ctx.arc(x, y, 1.8, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(244,184,96,0.95)";
+        ctx.fillStyle = "rgba(185,125,34,0.95)";
         ctx.fill();
       }
     };

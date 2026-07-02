@@ -164,7 +164,7 @@ export function Nav() {
             onClick={() => setOpen(false)}
             className="absolute inset-0 bg-bg/80 backdrop-blur-sm"
           />
-          <nav className="absolute inset-x-3 top-20 flex flex-col gap-1 rounded-[var(--radius-xl)] border border-line bg-surface-0 p-3 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.9)]">
+          <nav className="absolute inset-x-3 top-20 flex flex-col gap-1 rounded-[var(--radius-xl)] border border-line bg-surface-0 p-3 shadow-[0_30px_80px_-40px_rgba(70,55,30,0.35)]">
             {LINKS.map(([label, href]) => (
               <Link
                 key={href}
