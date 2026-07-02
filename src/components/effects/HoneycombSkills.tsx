@@ -37,8 +37,10 @@ type CustomIcon = {
  * simple-icons no longer ships (C#, Java, AWS, Azure — pulled for brand-policy
  * reasons) use custom multi-path SVGs from devicon or hand-drawn paths.
  *
- * Layout is computed in code (hex grid, responsive column count) — server-render
- * / no-JS falls back to a plain readable chip list.
+ * Laid out as a wrapping, interlocking honeycomb: every tile is visible at once
+ * (no horizontal scroll), rows nest with the classic half-step offset, and the
+ * whole block reflows to the container width (hex size steps down on narrow
+ * screens). Icons keep their brand colors; hovering a tile grows it slightly.
  */
 type Tile = { name: string; icon?: SimpleIcon; custom?: CustomIcon };
 
@@ -130,163 +132,142 @@ function iconColor(hex: string): string {
 }
 
 const HEX_CLIP = "polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%)";
-const GAP_X = 8;
-const GAP_Y = 8;
-
-function colsFor(w: number): number {
-  if (w < 380) return 3;
-  if (w < 560) return 4;
-  if (w < 780) return 5;
-  if (w < 1040) return 6;
-  return 7;
-}
 
 type Placed = { tile: Tile; x: number; y: number };
+type Layout = {
+  placed: Placed[];
+  trackW: number;
+  trackH: number;
+  hexW: number;
+  hexH: number;
+  iconSize: number;
+  labelSize: number;
+};
+
+/**
+ * Pure geometry: pack the tiles into an interlocking honeycomb that fits `width`.
+ * In a true hexagonal lattice all six neighbours are equidistant, so once the
+ * horizontal step is `stepX`, the row pitch must be `stepX · √3/2` and odd rows
+ * shift `stepX/2`. That keeps the gap identical on every edge (a flush grid is
+ * just the `gap = 0` case); mismatching the two is what makes spacing look
+ * tight vertically but loose horizontally.
+ */
+function computeLayout(width: number): Layout {
+  const hexW = width < 560 ? 78 : width < 900 ? 92 : 104;
+  const gap = Math.round(hexW * 0.07); // uniform gap between adjacent hexes
+  const hexH = Math.round((hexW * 2) / Math.sqrt(3)); // regular hex point-to-point
+  const stepX = hexW + gap; // center-to-center distance to any neighbour
+  const vStep = Math.round((stepX * Math.sqrt(3)) / 2); // even-lattice row pitch
+  const offset = stepX / 2; // odd-row horizontal shift
+  const iconSize = Math.round(hexW * 0.34);
+  const labelSize = Math.max(9, Math.round(hexW * 0.105));
+
+  // Most tiles a row can hold; odd rows spill offset further right, so budget it.
+  const perRow = Math.min(
+    TILES.length,
+    Math.max(2, Math.floor((width - hexW - offset) / stepX) + 1),
+  );
+
+  const placed = TILES.map((tile, i) => {
+    const row = Math.floor(i / perRow);
+    const col = i % perRow;
+    return { tile, x: col * stepX + (row % 2 === 1 ? offset : 0), y: row * vStep };
+  });
+
+  const rows = Math.ceil(TILES.length / perRow);
+  const trackW = (perRow - 1) * stepX + hexW + (rows > 1 ? offset : 0);
+  const trackH = (rows - 1) * vStep + hexH;
+  return { placed, trackW, trackH, hexW, hexH, iconSize, labelSize };
+}
+
+function TileIcon({ tile, size }: { tile: Tile; size: number }) {
+  if (tile.icon) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+        <path d={tile.icon.path} fill={iconColor(tile.icon.hex)} />
+      </svg>
+    );
+  }
+  if (tile.custom) {
+    return (
+      <svg width={size} height={size} viewBox={tile.custom.viewBox} aria-hidden="true">
+        {tile.custom.paths.map((cp, pi) => (
+          <path key={pi} d={cp.d} fill={cp.fill} />
+        ))}
+      </svg>
+    );
+  }
+  return null;
+}
 
 export function HoneycombSkills({ className }: { className?: string }) {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const [layout, setLayout] = useState<{
-    placed: Placed[];
-    hexW: number;
-    hexH: number;
-    height: number;
-  } | null>(null);
   const [hovered, setHovered] = useState<number | null>(null);
+  // Assume a desktop width for first paint (matches SSR); the observer corrects
+  // it to the real container width on mount and on every resize.
+  const [layout, setLayout] = useState<Layout>(() => computeLayout(1100));
 
   useEffect(() => {
-    const wrap = wrapRef.current;
-    if (!wrap) return;
-
-    const compute = () => {
-      const w = wrap.clientWidth;
-      if (!w) return;
-      const cols = colsFor(w);
-      // reserve half a tile + gaps for the offset rows so they never overflow
-      const hexW = (w - (cols - 0.5) * GAP_X) / (cols + 0.5);
-      const hexH = (hexW * 2) / Math.sqrt(3); // pointy-top corner-to-corner
-      const step = hexW + GAP_X;
-      const rowPitch = hexH * 0.75 + GAP_Y;
-
-      const raw = TILES.map((tile, i) => {
-        const row = Math.floor(i / cols);
-        const col = i % cols;
-        return {
-          tile,
-          x: col * step + (row % 2) * (step / 2),
-          y: row * rowPitch,
-        };
-      });
-      const minX = Math.min(...raw.map((p) => p.x));
-      const maxX = Math.max(...raw.map((p) => p.x + hexW));
-      const shift = (w - (maxX - minX)) / 2 - minX;
-      const placed = raw.map((p) => ({ ...p, x: p.x + shift }));
-      const maxY = Math.max(...placed.map((p) => p.y));
-
-      setLayout({ placed, hexW, hexH, height: maxY + hexH });
+    const el = wrapRef.current;
+    if (!el) return;
+    const measure = () => {
+      const w = el.clientWidth;
+      if (w > 0) setLayout(computeLayout(w));
     };
-
-    compute();
-    let raf = 0;
-    const onResize = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(compute);
-    };
-    window.addEventListener("resize", onResize);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", onResize);
-    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
+  const { placed, trackW, trackH, hexW, hexH, iconSize, labelSize } = layout;
+
   return (
-    <div ref={wrapRef} className={className}>
-      {layout === null ? (
-        // Server / no-JS fallback: plain, readable list.
-        <ul className="flex flex-wrap gap-2">
-          {TILES.map((t) => (
+    <div className={className} ref={wrapRef}>
+      <ul
+        className="relative mx-auto"
+        style={{ width: trackW, height: trackH }}
+        onMouseLeave={() => setHovered(null)}
+      >
+        {placed.map((p, i) => {
+          const isHot = hovered === i;
+          return (
             <li
-              key={t.name}
-              className="label rounded-[var(--radius-full)] border border-line px-3.5 py-1.5 text-text-muted"
+              key={p.tile.name}
+              title={p.tile.name}
+              onMouseEnter={() => setHovered(i)}
+              className="absolute flex items-center justify-center"
+              style={{
+                left: p.x,
+                top: p.y,
+                width: hexW,
+                height: hexH,
+                clipPath: HEX_CLIP,
+                background: isHot
+                  ? "color-mix(in oklab, var(--color-accent) 16%, var(--color-surface-1))"
+                  : "var(--color-surface-1)",
+                transform: isHot ? "scale(1.09)" : "scale(1)",
+                transformOrigin: "center",
+                transition: "transform .18s ease, background .18s ease",
+                zIndex: isHot ? 2 : 1,
+              }}
             >
-              {t.name}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <>
-          <div
-            className="relative mx-auto"
-            style={{ height: layout.height }}
-            onMouseLeave={() => setHovered(null)}
-          >
-            {layout.placed.map((p, i) => {
-              const isHot = hovered === i;
-              const iconSize = Math.round(layout.hexW * 0.42);
-              return (
-                <div
-                  key={p.tile.name}
-                  title={p.tile.name}
-                  onMouseEnter={() => setHovered(i)}
-                  className="absolute flex items-center justify-center"
-                  style={{
-                    left: p.x,
-                    top: p.y,
-                    width: layout.hexW,
-                    height: layout.hexH,
-                    clipPath: HEX_CLIP,
-                    background: isHot
-                      ? "color-mix(in oklab, var(--color-accent) 16%, var(--color-surface-1))"
-                      : "var(--color-surface-1)",
-                    transform: isHot ? "scale(1.07)" : "scale(1)",
-                    transformOrigin: "center",
-                    transition: "transform .18s ease, background .18s ease",
-                    zIndex: isHot ? 2 : 1,
-                  }}
+              <div className="flex flex-col items-center gap-1.5">
+                <TileIcon tile={p.tile} size={iconSize} />
+                <span
+                  className="font-mono text-text-faint leading-none"
+                  style={{ fontSize: labelSize }}
                 >
-                  <div className="flex flex-col items-center gap-1">
-                    {p.tile.icon ? (
-                      <svg
-                        width={iconSize}
-                        height={iconSize}
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d={p.tile.icon.path}
-                          fill={iconColor(p.tile.icon.hex)}
-                        />
-                      </svg>
-                    ) : p.tile.custom ? (
-                      <svg
-                        width={iconSize}
-                        height={iconSize}
-                        viewBox={p.tile.custom.viewBox}
-                        aria-hidden="true"
-                      >
-                        {p.tile.custom.paths.map((cp, pi) => (
-                          <path key={pi} d={cp.d} fill={cp.fill} />
-                        ))}
-                      </svg>
-                    ) : null}
-                    <span
-                      className="font-mono text-text-faint leading-none"
-                      style={{ fontSize: Math.max(8, Math.round(layout.hexW * 0.11)) }}
-                    >
-                      {p.tile.name}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <p
-            aria-hidden="true"
-            className="label mt-3 text-center text-text-faint transition-colors"
-          >
-            {hovered === null ? "the stack" : layout.placed[hovered].tile.name}
-          </p>
-        </>
-      )}
+                  {p.tile.name}
+                </span>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      <p aria-hidden="true" className="label mt-5 text-text-faint transition-colors">
+        {hovered === null ? "the stack" : placed[hovered].tile.name}
+      </p>
     </div>
   );
 }
