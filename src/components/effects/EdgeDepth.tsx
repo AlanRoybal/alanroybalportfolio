@@ -33,18 +33,21 @@ const PLANES: {
   opacity: number;
   filter?: string;
 }[] = [
-  { depth: "bg", speed: 0.06, inset: 0, opacity: 0.8 },
+  // slower speeds keep the strips shorter, which renders them narrower —
+  // that's what lets the artwork's detail fit inside the gutter instead of
+  // showing only its silhouette edge
+  { depth: "bg", speed: 0.03, inset: 0, opacity: 0.8 },
   {
     depth: "mid",
-    speed: 0.15,
-    inset: 26,
+    speed: 0.08,
+    inset: 30,
     opacity: 0.95,
     filter: "drop-shadow(2px 5px 6px rgba(63,47,28,0.3))",
   },
   {
     depth: "fg",
-    speed: 0.28,
-    inset: 54,
+    speed: 0.16,
+    inset: 64,
     opacity: 1,
     filter: "drop-shadow(3px 7px 8px rgba(63,47,28,0.35))",
   },
@@ -54,11 +57,11 @@ function Flank({ side }: { side: "left" | "right" }) {
   const inner = side === "left" ? "right" : "left";
   return (
     <div
-      className="pointer-events-none absolute inset-y-0 hidden w-[clamp(140px,14vw,250px)] overflow-hidden lg:block"
+      className="pointer-events-none absolute inset-y-0 hidden w-[clamp(200px,18vw,340px)] overflow-hidden lg:block"
       style={{
         [side]: 0,
-        maskImage: `linear-gradient(to ${side === "right" ? "left" : "right"}, black 40%, transparent)`,
-        WebkitMaskImage: `linear-gradient(to ${side === "right" ? "left" : "right"}, black 40%, transparent)`,
+        maskImage: `linear-gradient(to ${side === "right" ? "left" : "right"}, black 55%, transparent)`,
+        WebkitMaskImage: `linear-gradient(to ${side === "right" ? "left" : "right"}, black 55%, transparent)`,
       }}
     >
       {PLANES.map((p) => (
