@@ -1,11 +1,14 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { AnimatePresence, motion } from "motion/react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { getLenis } from "@/lib/lenis";
 import { projects, type Project } from "@/content";
 import { ScrambleText } from "@/components/effects/ScrambleText";
+import { Tilt } from "@/components/effects/Tilt";
 import { cn } from "@/lib/cn";
 
 const DESKTOP_MOTION = "(min-width: 768px) and (prefers-reduced-motion: no-preference)";
@@ -24,35 +27,69 @@ const PANELS: Panel[] = projects.flatMap((project, pi) => [
   { project, pi, kind: "showcase" as const },
 ]);
 
+/** Shared terminal chrome: the traffic-light bar with a session title. */
+function TerminalBar({ title, hint }: { title: string; hint?: string }) {
+  return (
+    <div className="flex items-center gap-2 border-b border-line-faint bg-surface-0/70 px-4 py-3">
+      <span className="h-2.5 w-2.5 rounded-full bg-danger/70" />
+      <span className="h-2.5 w-2.5 rounded-full bg-warning/70" />
+      <span className="h-2.5 w-2.5 rounded-full bg-positive/70" />
+      <span className="label ml-3 truncate text-text-faint">{title}</span>
+      {hint ? <span className="label ml-auto shrink-0 text-text-faint">{hint}</span> : null}
+    </div>
+  );
+}
+
+function Prompt({ slug, cmd }: { slug: string; cmd: string }) {
+  return (
+    <p className="text-text-faint">
+      <span className="text-accent">~/{slug}</span> $ {cmd}
+    </p>
+  );
+}
+
 /**
  * A code-drawn "spec card" standing in for a product screenshot — a faux terminal
  * session printing the project's real stack and metrics. Asset-free, on-theme,
- * and always populated with true data.
+ * and always populated with true data. Clicking it grows the session into a
+ * full-screen terminal (TerminalLightbox) with the whole story.
  */
-function SpecCard({ project, tint }: { project: Project; tint: string }) {
+function SpecCard({
+  project,
+  tint,
+  onExpand,
+  hidden,
+}: {
+  project: Project;
+  tint: string;
+  onExpand: (from: DOMRect) => void;
+  hidden: boolean;
+}) {
   const slug = project.id;
+  const btnRef = useRef<HTMLButtonElement>(null);
   return (
-    <div className="overflow-hidden rounded-[var(--radius-lg)] border border-line bg-surface-sunken font-mono text-[length:var(--text-sm)] shadow-[0_30px_80px_-40px_rgba(0,0,0,0.8)] ring-1 ring-inset ring-line-faint">
-      <div className="flex items-center gap-2 border-b border-line-faint bg-surface-0/70 px-4 py-3">
-        <span className="h-2.5 w-2.5 rounded-full bg-danger/70" />
-        <span className="h-2.5 w-2.5 rounded-full bg-warning/70" />
-        <span className="h-2.5 w-2.5 rounded-full bg-positive/70" />
-        <span className="label ml-3 truncate text-text-faint">{slug} — zsh</span>
-      </div>
+    <button
+      ref={btnRef}
+      type="button"
+      aria-haspopup="dialog"
+      aria-label={`Open the full ${project.title} terminal session`}
+      onClick={() => btnRef.current && onExpand(btnRef.current.getBoundingClientRect())}
+      style={hidden ? { visibility: "hidden" } : undefined}
+      className="block w-full cursor-pointer overflow-hidden rounded-[var(--radius-lg)] border border-line bg-surface-sunken text-left font-mono text-[length:var(--text-sm)] ring-1 ring-inset ring-line-faint transition-colors duration-[var(--dur-quick)] hover:border-line-strong"
+    >
+      <TerminalBar title={`${slug} — zsh`} hint="click to expand ⤢" />
       <div
         className="relative p-5 leading-relaxed"
         style={{
           backgroundImage: `radial-gradient(120% 120% at 100% 0%, rgba(${tint},0.10), transparent 60%)`,
         }}
       >
-        <p className="text-text-faint">
-          <span className="text-accent">~/{slug}</span> $ cat stack
-        </p>
+        <Prompt slug={slug} cmd="cat stack" />
         <p className="mt-1 text-text">{project.stack.join(" · ")}</p>
 
-        <p className="mt-4 text-text-faint">
-          <span className="text-accent">~/{slug}</span> $ run --metrics
-        </p>
+        <div className="mt-4">
+          <Prompt slug={slug} cmd="run --metrics" />
+        </div>
         <div className="mt-1 flex flex-col gap-1">
           {project.metrics.map((m) => (
             <div key={m.label} className="flex justify-between gap-4">
@@ -62,15 +99,174 @@ function SpecCard({ project, tint }: { project: Project; tint: string }) {
           ))}
         </div>
 
-        <p className="mt-4 text-text-faint">
-          <span className="text-accent">~/{slug}</span> $ status
-        </p>
+        <div className="mt-4">
+          <Prompt slug={slug} cmd="status" />
+        </div>
         <p className="mt-1 text-positive">
           ✓ {project.status ?? project.badge ?? "shipped"}
           <span className="ml-1 inline-block w-2 animate-pulse text-accent">▍</span>
         </p>
       </div>
-    </div>
+    </button>
+  );
+}
+
+/**
+ * The spec card, grown to full screen: the same terminal session continued —
+ * stack, all metrics, `cat readme` (the features), `open links`. It scales up
+ * from the card's exact rect and returns to it on close, so the card and the
+ * dialog read as one object changing size, not two screens.
+ */
+function TerminalLightbox({
+  project,
+  tint,
+  from,
+  onClose,
+}: {
+  project: Project;
+  tint: string;
+  from: DOMRect;
+  onClose: () => void;
+}) {
+  const slug = project.id;
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    // freeze the page under the dialog (Lenis when running, native otherwise)
+    const lenis = getLenis();
+    lenis?.stop();
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const prevFocus = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+      lenis?.start();
+      prevFocus?.focus?.();
+    };
+  }, [onClose]);
+
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const finalW = Math.min(920, vw * 0.92);
+  const entry = {
+    x: from.left + from.width / 2 - vw / 2,
+    y: from.top + from.height / 2 - vh / 2,
+    scale: from.width / finalW,
+    opacity: 1,
+  };
+
+  return createPortal(
+    <div className="fixed inset-0 z-[85] flex items-center justify-center p-[4vw]">
+      <motion.button
+        type="button"
+        aria-label="Close"
+        tabIndex={-1}
+        onClick={onClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+        className="absolute inset-0 cursor-default bg-bg/80 backdrop-blur-sm"
+      />
+      <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${project.title} — full terminal session`}
+        initial={entry}
+        animate={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+        exit={{ ...entry, opacity: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="relative flex max-h-[84vh] w-full flex-col overflow-hidden rounded-[var(--radius-lg)] border border-line bg-surface-sunken font-mono text-[length:var(--text-sm)] shadow-[0_60px_160px_-40px_rgba(0,0,0,0.9)] ring-1 ring-inset ring-line-faint"
+        style={{ maxWidth: finalW }}
+      >
+        <div className="relative">
+          <TerminalBar title={`${slug} — zsh — full session`} />
+          <button
+            ref={closeRef}
+            type="button"
+            onClick={onClose}
+            className="label absolute right-3 top-1/2 -translate-y-1/2 rounded-[var(--radius-sm)] px-2 py-1 text-text-muted transition-colors hover:text-accent"
+          >
+            esc ✕
+          </button>
+        </div>
+        <div
+          className="overflow-y-auto p-6 leading-relaxed"
+          style={{
+            backgroundImage: `radial-gradient(120% 120% at 100% 0%, rgba(${tint},0.10), transparent 60%)`,
+          }}
+        >
+          <Prompt slug={slug} cmd="cat tagline" />
+          <p className="mt-1 max-w-[60ch] text-text">{project.tagline}</p>
+
+          <div className="mt-5">
+            <Prompt slug={slug} cmd="cat stack" />
+          </div>
+          <p className="mt-1 text-text">{project.stack.join(" · ")}</p>
+
+          <div className="mt-5">
+            <Prompt slug={slug} cmd="run --metrics" />
+          </div>
+          <div className="mt-1 flex max-w-[52ch] flex-col gap-1">
+            {project.metrics.map((m) => (
+              <div key={m.label} className="flex justify-between gap-4">
+                <span className="text-text-muted">{m.label.toLowerCase()}</span>
+                <span className="tabular-nums text-text-strong">{m.value}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5">
+            <Prompt slug={slug} cmd="cat readme" />
+          </div>
+          <div className="mt-1 flex flex-col gap-3">
+            {project.features.map((f) => (
+              <div key={f.title}>
+                <p className="text-text-strong"># {f.title}</p>
+                <p className="max-w-[64ch] text-text-muted">{f.body}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5">
+            <Prompt slug={slug} cmd="open links" />
+          </div>
+          <div className="mt-1 flex flex-col gap-1">
+            {project.links.map((l) =>
+              l.href !== "#" ? (
+                <a
+                  key={l.label}
+                  href={l.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-fit text-text underline decoration-line-strong underline-offset-4 transition-colors hover:text-accent hover:decoration-accent"
+                >
+                  → {l.label.toLowerCase()}
+                </a>
+              ) : (
+                <span key={l.label} className="text-text-faint">
+                  → {l.label.toLowerCase()} · soon
+                </span>
+              ),
+            )}
+          </div>
+
+          <div className="mt-5">
+            <Prompt slug={slug} cmd="status" />
+          </div>
+          <p className="mt-1 text-positive">
+            ✓ {project.status ?? project.badge ?? "shipped"}
+            <span className="ml-1 inline-block w-2 animate-pulse text-accent">▍</span>
+          </p>
+        </div>
+      </motion.div>
+    </div>,
+    document.body,
   );
 }
 
@@ -142,6 +338,8 @@ function OverviewPanel({ project, pi, total }: { project: Project; pi: number; t
 }
 
 function ShowcasePanel({ project, pi, total }: { project: Project; pi: number; total: number }) {
+  const [from, setFrom] = useState<DOMRect | null>(null);
+  const tint = TINTS[pi % TINTS.length];
   return (
     <div className="mx-auto grid w-full max-w-[var(--container-content)] grid-cols-1 items-center gap-10 px-[clamp(20px,6vw,90px)] md:grid-cols-2 md:gap-16">
       <div>
@@ -165,7 +363,24 @@ function ShowcasePanel({ project, pi, total }: { project: Project; pi: number; t
           <ProjectLinks project={project} />
         </div>
       </div>
-      <SpecCard project={project} tint={TINTS[pi % TINTS.length]} />
+      <Tilt className="rounded-[var(--radius-lg)]">
+        <SpecCard
+          project={project}
+          tint={tint}
+          hidden={from !== null}
+          onExpand={setFrom}
+        />
+      </Tilt>
+      <AnimatePresence>
+        {from ? (
+          <TerminalLightbox
+            project={project}
+            tint={tint}
+            from={from}
+            onClose={() => setFrom(null)}
+          />
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }
@@ -196,7 +411,9 @@ export function ProjectsHorizontal() {
           animation: tween,
           trigger: pin,
           start: "top top",
-          end: () => "+=" + distance(),
+          // Pan faster than 1:1 — six full-width panels at natural scroll length
+          // makes the section feel endless; 0.7× keeps momentum without rushing.
+          end: () => "+=" + Math.round(distance() * 0.7),
           pin: true,
           anticipatePin: 1,
           scrub: true,
@@ -268,7 +485,10 @@ export function ProjectsHorizontal() {
       <div className="mx-auto w-full max-w-[var(--container-content)] px-[var(--space-gutter)] pt-[var(--space-section)]">
         <header className="relative mb-2 border-b border-line pb-7">
           <span className="label text-text-faint">03 / projects</span>
-          <h2 className="mt-4 max-w-[20ch] font-display text-[length:var(--text-3xl)] font-light lowercase leading-[1.02] tracking-tight text-text-strong [&_em]:italic [&_em]:text-glow">
+          <h2
+            data-kinetic
+            className="mt-4 max-w-[20ch] font-display text-[length:var(--text-3xl)] font-light lowercase leading-[1.02] tracking-tight text-text-strong [&_em]:italic [&_em]:text-glow"
+          >
             things i&apos;ve{" "}
             <em>
               <ScrambleText text="built" trigger="view" />
@@ -276,7 +496,7 @@ export function ProjectsHorizontal() {
             .
           </h2>
           <p className="mt-5 max-w-[60ch] text-[length:var(--text-md)] text-text-muted">
-            Two panels each — the what, then the how.
+            Two panels each: the what, then the how.
             <span className="ml-2 hidden text-text-faint motion-safe:md:inline">
               Keep scrolling to advance →
             </span>
