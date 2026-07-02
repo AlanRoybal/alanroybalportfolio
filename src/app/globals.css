@@ -409,6 +409,134 @@
     opacity: 1;
   }
 
+  /* ==========================================================
+     SURFACE LIGHTING — every raised surface shares one light
+     source above the page: a bright top edge, a soft wash down
+     the face, a tight contact shadow plus a wide ambient one.
+     ========================================================== */
+  .lit {
+    position: relative;
+    background-image: linear-gradient(
+      to bottom,
+      rgba(245, 241, 232, 0.03),
+      transparent 38%
+    );
+    box-shadow:
+      inset 0 1px 0 rgba(245, 241, 232, 0.05),
+      0 1px 2px rgba(0, 0, 0, 0.45),
+      0 24px 48px -28px rgba(0, 0, 0, 0.55);
+  }
+  /* gradient border ring — brightest at the top edge, fading out by the
+     bottom corners; drawn over the element's own 1px flat border */
+  .lit::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      to bottom,
+      rgba(245, 241, 232, 0.16),
+      rgba(245, 241, 232, 0.03) 45%,
+      transparent 78%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* per-section key light — a soft warm pool falling from the top centre,
+     so each section is lit rather than uniformly dark */
+  .keylight {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      720px 340px at 50% 0%,
+      rgba(245, 241, 232, 0.05),
+      transparent 70%
+    );
+  }
+
+  /* raised section — the tinted alternation reads as a plate lifted off
+     the page (lit top edge, shadow thrown onto its neighbours) */
+  .section-raised {
+    box-shadow:
+      inset 0 1px 0 rgba(245, 241, 232, 0.045),
+      0 -36px 64px -48px rgba(0, 0, 0, 0.9),
+      0 36px 64px -48px rgba(0, 0, 0, 0.9);
+    background-image: linear-gradient(
+      to bottom,
+      rgba(245, 241, 232, 0.015),
+      transparent 22%
+    );
+  }
+
+  /* ==========================================================
+     SEAM — signals firing through the constellation between
+     sections (same behaviour as the hero's NeuralField)
+     ========================================================== */
+  .seam-signal {
+    stroke-dasharray: 6 94;
+    stroke-linecap: round;
+    opacity: 0.9;
+    animation: seam-signal 6s linear infinite;
+  }
+  @keyframes seam-signal {
+    from {
+      stroke-dashoffset: 100;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  .seam-breathe {
+    animation: seam-breathe 3.4s ease-in-out infinite;
+  }
+  @keyframes seam-breathe {
+    0%,
+    100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  /* the cursor block blinks like the site's terminal caret */
+  .seam-blink {
+    animation: seam-blink 1.15s steps(2, jump-none) infinite;
+  }
+  @keyframes seam-blink {
+    0% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0.25;
+    }
+  }
+  /* the darts' signal trails stream backwards */
+  .seam-drift {
+    stroke-dasharray: 5 11;
+    animation: seam-drift 1.6s linear infinite;
+  }
+  @keyframes seam-drift {
+    to {
+      stroke-dashoffset: 16;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .seam-signal,
+    .seam-drift {
+      display: none;
+    }
+  }
+
   /* mono micro-label / HUD readout */
   .label {
     font-family: var(--font-mono);

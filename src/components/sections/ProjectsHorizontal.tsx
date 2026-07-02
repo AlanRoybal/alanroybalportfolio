@@ -482,7 +482,8 @@ export function ProjectsHorizontal() {
       aria-label="Selected projects"
       className="relative w-full overflow-x-clip"
     >
-      <div className="mx-auto w-full max-w-[var(--container-content)] px-[var(--space-gutter)] pt-[var(--space-section)]">
+      <div aria-hidden="true" className="keylight" />
+      <div className="relative mx-auto w-full max-w-[var(--container-content)] px-[var(--space-gutter)] pt-[var(--space-section)]">
         <header className="relative mb-2 border-b border-line pb-7">
           <span className="label text-text-faint">03 / projects</span>
           <h2

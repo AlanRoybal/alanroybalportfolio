@@ -26,9 +26,13 @@ export function Section({ id, index, label, title, intro, tint, className, child
     <section
       id={id}
       data-snap
-      className={cn("relative w-full scroll-mt-16 py-[var(--space-section)]", tint ? "bg-surface-0" : "bg-bg")}
+      className={cn(
+        "relative w-full scroll-mt-16 py-[var(--space-section)]",
+        tint ? "section-raised bg-surface-0" : "bg-bg",
+      )}
     >
-      <div className="mx-auto w-full max-w-[var(--container-content)] px-[var(--space-gutter)]">
+      <div aria-hidden="true" className="keylight" />
+      <div className="relative mx-auto w-full max-w-[var(--container-content)] px-[var(--space-gutter)]">
         <header data-reveal className="relative mb-14 border-b border-line pb-7">
           {/* inner wrapper carries the parallax drift so it never fights the
               header's own scroll-in reveal (both are transforms) */}
