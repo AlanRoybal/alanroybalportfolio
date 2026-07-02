@@ -9,18 +9,21 @@ import {
 import { subscribeCharmImpact } from "@/lib/charmImpact";
 
 const GLYPHS = "abcdefghijklmnopqrstuvwxyz01<>/{}#*+=".split("");
+const CASCADE_MS = 260;
 
 /**
- * The giant "alan roybal" wordmark, held in a scrambled state until the charm
- * lands on it — then the impact resolves it. The resolve is driven by the shared
- * charm-impact progress (0 → scrambled, 1 → resolved), so it scrubs both ways
- * with scroll.
+ * The giant "alan roybal" wordmark, held FULLY scrambled while the charm is
+ * in flight — the whole approach is anticipation. The shared charm-impact
+ * value is now a gate (0 = in flight, 1 = the charm has landed): on impact
+ * the letters resolve in a fast left→right cascade, each one hopping as the
+ * wave passes through it, an amber hairline draws itself out from the point
+ * of impact, and the period — delivered by the charm — turns amber for good.
+ * Scrolling back above the impact point re-scrambles everything and re-arms
+ * the moment.
  *
- * pretext is what makes it "render properly": each word is measured with
- * `prepareWithSegments` + `measureNaturalWidth` and pinned to its true width, so
- * the scrambling glyphs never reflow the giant type and it lays out cleanly —
- * the phrase still wraps at the space between words. No-JS / reduced motion shows
- * the plain resolved wordmark.
+ * pretext pins each word to its true width so the scrambling glyphs never
+ * reflow the giant type. No-JS / reduced motion shows the plain resolved
+ * wordmark (amber period included).
  */
 export function CharmWordmark({
   text,
@@ -51,64 +54,146 @@ export function CharmWordmark({
       const { font, opts } = fontStringFrom(el);
       const words = text.split(" ");
 
-      // Build one width-pinned inline-block span per word so scrambling glyphs
-      // never reflow the wordmark; spaces between words still allow wrapping.
+      // One width-pinned inline-block span per word (so scrambling glyphs
+      // never reflow the wordmark), one span per LETTER inside it (so the
+      // impact wave can ripple through the characters individually).
       el.textContent = "";
-      const parts: { node: HTMLSpanElement; chars: string[] }[] = [];
+      el.style.position = "relative";
+      const charSpans: HTMLSpanElement[] = [];
+      const realChars: string[] = [];
       words.forEach((w, wi) => {
         if (wi > 0) el.appendChild(document.createTextNode(" "));
-        const span = document.createElement("span");
-        span.style.display = "inline-block";
-        span.style.whiteSpace = "nowrap";
+        const word = document.createElement("span");
+        word.style.display = "inline-block";
+        word.style.whiteSpace = "nowrap";
         try {
           const prepared = prepareWithSegments(w, font, opts);
           const width = measureNaturalWidth(prepared);
-          if (width > 0) span.style.width = `${Math.ceil(width)}px`;
+          if (width > 0) word.style.width = `${Math.ceil(width)}px`;
         } catch {
           /* best-effort */
         }
-        span.textContent = w;
-        el.appendChild(span);
-        parts.push({ node: span, chars: Array.from(w) });
+        for (const ch of Array.from(w)) {
+          const cs = document.createElement("span");
+          cs.style.display = "inline-block";
+          cs.textContent = ch;
+          word.appendChild(cs);
+          charSpans.push(cs);
+          realChars.push(ch);
+        }
+        el.appendChild(word);
       });
 
-      // amber glow period — kept out of the scramble
+      // the period — the charm delivers it; amber only after impact
       const dot = document.createElement("span");
       dot.className = "text-glow";
       dot.textContent = ".";
       el.appendChild(dot);
 
-      const total = parts.reduce((a, p) => a + p.chars.length, 0);
+      if (reduced) return; // fully resolved, amber period, no theatrics
 
-      if (reduced) return; // leave fully resolved, no scramble
+      dot.style.color = "inherit"; // ink until the charm lands
 
-      // Render the wordmark at a given resolve amount (0..1).
+      const total = realChars.length;
       const draw = (p: number) => {
         const revealed = p * total;
-        let idx = 0;
         const seed = Math.floor(performance.now() / 40);
-        for (const part of parts) {
-          let out = "";
-          for (let i = 0; i < part.chars.length; i++) {
-            if (idx < revealed - 0.001) out += part.chars[i];
-            else out += GLYPHS[(seed + idx * 7) % GLYPHS.length];
-            idx++;
-          }
-          part.node.textContent = out;
-          idx += 0; // keep counter continuous across words
+        for (let i = 0; i < total; i++) {
+          charSpans[i].textContent =
+            i < revealed - 0.001 ? realChars[i] : GLYPHS[(seed + i * 7) % GLYPHS.length];
         }
       };
 
-      let current = 0;
+      let impacted = false;
+      let cascadeStart = 0;
+      let underline: HTMLSpanElement | null = null;
+
+      const strike = () => {
+        cascadeStart = performance.now();
+        // the wave hops through the letters as they resolve
+        charSpans.forEach((cs, i) => {
+          cs.animate(
+            [
+              { transform: "translateY(0)" },
+              { transform: "translateY(-0.09em)" },
+              { transform: "translateY(0)" },
+            ],
+            {
+              duration: 320,
+              delay: (i / total) * CASCADE_MS,
+              easing: "cubic-bezier(0.34, 1.56, 0.5, 1)",
+            },
+          );
+        });
+        // one soft amber flare on the whole mark
+        el.animate(
+          [
+            { textShadow: "0 0 0 rgba(185,125,34,0)" },
+            { textShadow: "0 0 30px rgba(185,125,34,0.5)" },
+            { textShadow: "0 0 0 rgba(185,125,34,0)" },
+          ],
+          { duration: 520, easing: "ease-out" },
+        );
+        // the delivered period turns amber and pops
+        dot.style.color = "";
+        dot.animate(
+          [
+            { transform: "scale(1)" },
+            { transform: "scale(1.45)" },
+            { transform: "scale(1)" },
+          ],
+          { duration: 380, easing: "cubic-bezier(0.34, 1.56, 0.5, 1)" },
+        );
+        // an amber hairline draws itself out from the point of impact
+        underline?.remove();
+        underline = document.createElement("span");
+        underline.setAttribute("aria-hidden", "true");
+        Object.assign(underline.style, {
+          position: "absolute",
+          left: "0",
+          right: "0",
+          bottom: "-0.05em",
+          height: "2px",
+          background: "var(--color-accent)",
+          transformOrigin: "26% 50%",
+          pointerEvents: "none",
+        } as CSSStyleDeclaration);
+        el.appendChild(underline);
+        const draw_ = underline.animate(
+          [
+            { transform: "scaleX(0)", opacity: 0.9 },
+            { transform: "scaleX(1.04)", opacity: 0.8, offset: 0.7 },
+            { transform: "scaleX(1)", opacity: 0.3 },
+          ],
+          { duration: 520, easing: "cubic-bezier(0.16, 1, 0.3, 1)", fill: "forwards" },
+        );
+        draw_.onfinish = () => {
+          if (underline) underline.style.opacity = "0.3";
+        };
+      };
+
+      const reset = () => {
+        dot.style.color = "inherit";
+        underline?.remove();
+        underline = null;
+      };
+
       draw(0);
       unsub = subscribeCharmImpact((v) => {
-        current = v;
+        const hit = v >= 1;
+        if (hit === impacted) return;
+        impacted = hit;
+        if (hit) strike();
+        else reset();
       });
-      // A light rAF so the unresolved glyphs keep flickering while scrambled,
-      // and the wordmark tracks the latest resolve value.
+
+      // rAF keeps the scrambled glyphs flickering and runs the resolve cascade
       const tick = () => {
         if (cancelled) return;
-        draw(current);
+        const p = impacted
+          ? Math.min(1, (performance.now() - cascadeStart) / CASCADE_MS)
+          : 0;
+        draw(p);
         raf = requestAnimationFrame(tick);
       };
       raf = requestAnimationFrame(tick);

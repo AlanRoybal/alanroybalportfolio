@@ -3,108 +3,82 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Flanking depth layers — the page's side gutters, populated. Three planes of
- * low-poly faceted objects per side (neural cores far, honeycomb pillars mid,
- * chip dies and ink shards near — the same faceted style as the seam
- * centerpieces) scroll at different speeds and fade toward the centre, so the
- * margins recede and the eye is pulled into the lit middle column.
+ * Flanking depth layers — each side gutter is a stack of three LONG
+ * CONTINUOUS origami cliff paintings (public/paper/side-*), layered like a
+ * paper-cut lightbox:
  *
- * Everything is a repeating SVG tile moved by a wrapped translateY (composited,
- * no repaint). Desktop-only (the gutters don't exist below lg); under
- * prefers-reduced-motion the planes hold still.
+ *   background  — pale hazy wall, at the bottom of the pile, reaching
+ *                 furthest into the page;
+ *   midground   — tan strata cliff covering it except a sliver of edge;
+ *   foreground  — dark kraft crags on top, covering the midground except
+ *                 the same sliver.
+ *
+ * Every layer spans the site in ONE pass — its top shows at the top of the
+ * page and its bottom arrives exactly at the end of the last section (the
+ * layer heights are computed from the page's real scroll length, no
+ * repeating). The foreground travels fastest, the background barely moves.
+ * Left and right sides carry their own artwork. Desktop-only; under
+ * prefers-reduced-motion the stack holds still.
  */
 
-const svg = (s: string) => `url("data:image/svg+xml,${encodeURIComponent(s)}")`;
+type Depth = "bg" | "mid" | "fg";
 
-const EDGE = "rgba(28,24,16,0.16)";
-
-// far plane — a small faceted neural core and a drifting ink shard
-const FAR = svg(
-  `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='420'>` +
-    `<g transform='translate(60 90)'>` +
-    `<polygon points='0,-20 17,-10 17,10 0,20 -17,10 -17,-10' fill='#d7ceb7' stroke='${EDGE}'/>` +
-    `<polygon points='0,-20 17,-10 0,0' fill='#e1d9c6'/>` +
-    `<polygon points='17,10 0,20 0,0' fill='#cfc5ac'/>` +
-    `<polygon points='0,-8 7,4 -7,4' fill='#8a5c14' opacity='0.5'/>` +
-    `</g>` +
-    `<g transform='translate(150 300)'>` +
-    `<polygon points='0,-16 10,8 -8,10' fill='#dcd3bd' stroke='${EDGE}'/>` +
-    `<polygon points='0,-16 10,8 2,-2' fill='#e8e1d0'/>` +
-    `</g>` +
-    `<circle cx='40' cy='230' r='1.5' fill='#b97d22' opacity='0.45'/>` +
-    `</svg>`,
-);
-
-// mid plane — a faceted hex column (honeycomb pillar) and a shard pair
-const MID = svg(
-  `<svg xmlns='http://www.w3.org/2000/svg' width='220' height='520'>` +
-    `<g transform='translate(70 150)'>` +
-    `<polygon points='0,-55 18,-45 18,45 0,55 -18,45 -18,-45' fill='#ded6c1' stroke='${EDGE}'/>` +
-    `<polygon points='0,-55 18,-45 6,-38 -12,-48' fill='#ede8da'/>` +
-    `<polygon points='18,-45 18,45 8,50 8,-40' fill='#d3c9b1'/>` +
-    `<polygon points='-4,-18 4,-16 4,18 -4,16' fill='#8a5c14' opacity='0.45'/>` +
-    `</g>` +
-    `<g transform='translate(160 390)'>` +
-    `<polygon points='0,-24 14,10 -12,14' fill='#e5decb' stroke='${EDGE}'/>` +
-    `<polygon points='0,-24 14,10 4,-4' fill='#efeadd'/>` +
-    `<polygon points='-24,4 -8,20 -26,26' fill='#dcd3bd'/>` +
-    `</g>` +
-    `<circle cx='50' cy='300' r='1.8' fill='#b97d22' opacity='0.5'/>` +
-    `</svg>`,
-);
-
-// near plane — a faceted chip die with pins and a large shard cluster
-const NEAR = svg(
-  `<svg xmlns='http://www.w3.org/2000/svg' width='240' height='620'>` +
-    `<g transform='translate(85 170)'>` +
-    `<polygon points='0,-34 34,0 0,34 -34,0' fill='#e5decb' stroke='${EDGE}'/>` +
-    `<polygon points='0,-34 34,0 0,0' fill='#f1ede1'/>` +
-    `<polygon points='0,34 -34,0 0,0' fill='#d7ceb7'/>` +
-    `<polygon points='0,-11 11,0 0,11 -11,0' fill='#b97d22' opacity='0.8'/>` +
-    `<g stroke='#b5a888' stroke-width='1.5'>` +
-    `<path d='M0,-34 L0,-48 M34,0 L48,0 M0,34 L0,48 M-34,0 L-48,0'/>` +
-    `</g>` +
-    `</g>` +
-    `<g transform='translate(150 450)'>` +
-    `<polygon points='0,-40 22,16 -18,22' fill='#eae4d4' stroke='${EDGE}'/>` +
-    `<polygon points='0,-40 22,16 6,-6' fill='#f3efe5'/>` +
-    `<polygon points='-34,8 -12,30 -38,38' fill='#dcd3bd'/>` +
-    `<polygon points='0,-40 6,-6 -8,-2' fill='#8a5c14' opacity='0.4'/>` +
-    `</g>` +
-    `<circle cx='60' cy='560' r='2' fill='#b97d22' opacity='0.55'/>` +
-    `</svg>`,
-);
-
-// factor = scroll speed of the plane; tile = pattern period for seamless wrap
-const LAYERS = [
-  { image: FAR, tile: 420, factor: 0.05, opacity: 0.5 },
-  { image: MID, tile: 520, factor: 0.12, opacity: 0.6 },
-  { image: NEAR, tile: 620, factor: 0.24, opacity: 0.75 },
-] as const;
+const PLANES: {
+  depth: Depth;
+  /** scroll speed — also the extra length of the strip beyond one viewport */
+  speed: number;
+  /** how far the layer's inner silhouette edge is pulled back from the
+   *  gutter's inner boundary — the stagger that reveals the layer beneath */
+  inset: number;
+  opacity: number;
+  filter?: string;
+}[] = [
+  // slower speeds keep the strips shorter, which renders them narrower —
+  // that's what lets the artwork's detail fit inside the gutter instead of
+  // showing only its silhouette edge
+  { depth: "bg", speed: 0.03, inset: 0, opacity: 0.8 },
+  {
+    depth: "mid",
+    speed: 0.08,
+    inset: 30,
+    opacity: 0.95,
+    filter: "drop-shadow(2px 5px 6px rgba(63,47,28,0.3))",
+  },
+  {
+    depth: "fg",
+    speed: 0.16,
+    inset: 64,
+    opacity: 1,
+    filter: "drop-shadow(3px 7px 8px rgba(63,47,28,0.35))",
+  },
+];
 
 function Flank({ side }: { side: "left" | "right" }) {
-  const mirror = side === "right";
+  const inner = side === "left" ? "right" : "left";
   return (
     <div
-      className="pointer-events-none absolute inset-y-0 hidden w-[clamp(120px,13vw,230px)] overflow-hidden lg:block"
+      className="pointer-events-none absolute inset-y-0 hidden w-[clamp(240px,21vw,420px)] overflow-hidden lg:block"
       style={{
         [side]: 0,
-        maskImage: `linear-gradient(to ${mirror ? "left" : "right"}, black 30%, transparent)`,
-        WebkitMaskImage: `linear-gradient(to ${mirror ? "left" : "right"}, black 30%, transparent)`,
+        maskImage: `linear-gradient(to ${side === "right" ? "left" : "right"}, black 65%, transparent)`,
+        WebkitMaskImage: `linear-gradient(to ${side === "right" ? "left" : "right"}, black 65%, transparent)`,
       }}
     >
-      {LAYERS.map((l, i) => (
+      {PLANES.map((p) => (
         <div
-          key={i}
-          data-depth={mirror ? l.factor * 1.15 : l.factor}
-          data-tile={l.tile}
-          className="absolute inset-x-0 top-0 bg-repeat-y"
+          key={p.depth}
+          data-strip
+          data-speed={p.speed}
+          className="absolute inset-x-0 top-0 bg-no-repeat"
           style={{
-            height: `calc(100% + ${l.tile}px)`,
-            backgroundImage: l.image,
-            // desync the two sides so they don't read as a mirrored stamp
-            backgroundPosition: `${mirror ? 90 + i * 37 : i * 53}px 0`,
-            opacity: l.opacity,
+            backgroundImage: `url(/paper/side-${side}-${p.depth}.png)`,
+            // full strip height, width follows; the outer bleed crops away
+            backgroundSize: "auto 100%",
+            // anchor the silhouette edge toward the page, staggered so each
+            // layer beneath peeks past the one on top
+            backgroundPosition: `${inner} ${p.inset}px top`,
+            opacity: p.opacity,
+            filter: p.filter,
           }}
         />
       ))}
@@ -118,27 +92,42 @@ export function EdgeDepth() {
   useEffect(() => {
     const root = rootRef.current;
     if (!root) return;
-    const layers = Array.from(root.querySelectorAll<HTMLElement>("[data-depth]"));
-
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const strips = Array.from(root.querySelectorAll<HTMLElement>("[data-strip]"));
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let raf = 0;
+    let lastMax = -1;
     const update = () => {
       raf = 0;
+      const vh = window.innerHeight;
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - vh);
+      if (maxScroll !== lastMax) {
+        // page length changed (load, resize, pinned sections measured) —
+        // resize every strip so its bottom lands exactly at the page end
+        lastMax = maxScroll;
+        for (const el of strips) {
+          const speed = Number(el.dataset.speed);
+          el.style.height = `${Math.round(vh + maxScroll * speed)}px`;
+        }
+      }
+      if (still) return;
       const y = window.scrollY;
-      for (const el of layers) {
-        const f = Number(el.dataset.depth);
-        const tile = Number(el.dataset.tile);
-        el.style.transform = `translate3d(0, ${-((y * f) % tile)}px, 0)`;
+      for (const el of strips) {
+        el.style.transform = `translate3d(0, ${-(y * Number(el.dataset.speed))}px, 0)`;
       }
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
     };
     update();
+    // pinned sections settle their added scroll length after mount
+    const settle = window.setTimeout(update, 1200);
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      window.clearTimeout(settle);
       if (raf) cancelAnimationFrame(raf);
     };
   }, []);
