@@ -30,17 +30,21 @@ const PLANES: {
   /** how far the layer's inner silhouette edge is pulled back from the
    *  gutter's inner boundary — the stagger that reveals the layer beneath */
   inset: number;
+  /** extra strip length past the page end, so the artwork's tapering base
+   *  sits below the fold at full scroll instead of hanging above it */
+  overshoot: number;
   opacity: number;
   filter?: string;
 }[] = [
   // slower speeds keep the strips shorter, which renders them narrower —
   // that's what lets the artwork's detail fit inside the gutter instead of
   // showing only its silhouette edge
-  { depth: "bg", speed: 0.03, inset: 0, opacity: 0.8 },
+  { depth: "bg", speed: 0.03, inset: 0, overshoot: 0, opacity: 0.8 },
   {
     depth: "mid",
     speed: 0.08,
     inset: 30,
+    overshoot: 60,
     opacity: 0.95,
     filter: "drop-shadow(2px 5px 6px rgba(63,47,28,0.3))",
   },
@@ -48,6 +52,7 @@ const PLANES: {
     depth: "fg",
     speed: 0.16,
     inset: 64,
+    overshoot: 160,
     opacity: 1,
     filter: "drop-shadow(3px 7px 8px rgba(63,47,28,0.35))",
   },
@@ -69,6 +74,7 @@ function Flank({ side }: { side: "left" | "right" }) {
           key={p.depth}
           data-strip
           data-speed={p.speed}
+          data-overshoot={p.overshoot}
           className="absolute inset-x-0 top-0 bg-no-repeat"
           style={{
             backgroundImage: `url(/paper/side-${side}-${p.depth}.png)`,
@@ -107,7 +113,8 @@ export function EdgeDepth() {
         lastMax = maxScroll;
         for (const el of strips) {
           const speed = Number(el.dataset.speed);
-          el.style.height = `${Math.round(vh + maxScroll * speed)}px`;
+          const overshoot = Number(el.dataset.overshoot) || 0;
+          el.style.height = `${Math.round(vh + maxScroll * speed + overshoot)}px`;
         }
       }
       if (still) return;
