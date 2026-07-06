@@ -49,10 +49,11 @@ function Prompt({ slug, cmd }: { slug: string; cmd: string }) {
 }
 
 /**
- * A code-drawn "spec card" standing in for a product screenshot — a faux terminal
- * session printing the project's real stack and metrics. Asset-free, on-theme,
- * and always populated with true data. Clicking it grows the session into a
- * full-screen terminal (TerminalLightbox) with the whole story.
+ * The project's showcase card: a terminal window fronted by a real product
+ * screenshot when one exists (with the spec session condensed underneath),
+ * falling back to the code-drawn spec card for projects without assets.
+ * Clicking it grows the session into a full-screen terminal (TerminalLightbox)
+ * with the whole story.
  */
 function SpecCard({
   project,
@@ -66,6 +67,7 @@ function SpecCard({
   hidden: boolean;
 }) {
   const slug = project.id;
+  const shot = project.screenshots?.[0];
   const btnRef = useRef<HTMLButtonElement>(null);
   return (
     <button
@@ -78,30 +80,39 @@ function SpecCard({
       className="block w-full cursor-pointer overflow-hidden rounded-[var(--radius-lg)] border border-line bg-surface-sunken text-left font-mono text-[length:var(--text-sm)] ring-1 ring-inset ring-line-faint transition-colors duration-[var(--dur-quick)] hover:border-line-strong"
     >
       <TerminalBar title={`${slug} — zsh`} hint="click to expand ⤢" />
+      {shot ? (
+        <img
+          src={shot.src}
+          alt={shot.alt}
+          loading="lazy"
+          className="block max-h-[42vh] w-full border-b border-line-faint bg-surface-0 object-cover object-top"
+        />
+      ) : null}
       <div
         className="relative p-5 leading-relaxed"
         style={{
           backgroundImage: `radial-gradient(120% 120% at 100% 0%, rgba(${tint},0.10), transparent 60%)`,
         }}
       >
-        <Prompt slug={slug} cmd="cat stack" />
-        <p className="mt-1 text-text">{project.stack.join(" · ")}</p>
-
-        <div className="mt-4">
-          <Prompt slug={slug} cmd="run --metrics" />
-        </div>
-        <div className="mt-1 flex flex-col gap-1">
-          {project.metrics.map((m) => (
-            <div key={m.label} className="flex justify-between gap-4">
-              <span className="text-text-muted">{m.label.toLowerCase()}</span>
-              <span className="tabular-nums text-text-strong">{m.value}</span>
+        {shot ? null : (
+          <>
+            <Prompt slug={slug} cmd="cat stack" />
+            <p className="mt-1 text-text">{project.stack.join(" · ")}</p>
+            <div className="mt-4">
+              <Prompt slug={slug} cmd="run --metrics" />
             </div>
-          ))}
-        </div>
+            <div className="mb-4 mt-1 flex flex-col gap-1">
+              {project.metrics.map((m) => (
+                <div key={m.label} className="flex justify-between gap-4">
+                  <span className="text-text-muted">{m.label.toLowerCase()}</span>
+                  <span className="tabular-nums text-text-strong">{m.value}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
-        <div className="mt-4">
-          <Prompt slug={slug} cmd="status" />
-        </div>
+        <Prompt slug={slug} cmd="status" />
         <p className="mt-1 text-positive">
           ✓ {project.status ?? project.badge ?? "shipped"}
           <span className="ml-1 inline-block w-2 animate-pulse text-accent">▍</span>
@@ -203,6 +214,29 @@ function TerminalLightbox({
         >
           <Prompt slug={slug} cmd="cat tagline" />
           <p className="mt-1 max-w-[60ch] text-text">{project.tagline}</p>
+
+          {project.screenshots?.length ? (
+            <>
+              <div className="mt-5">
+                <Prompt slug={slug} cmd="open screenshots/" />
+              </div>
+              <div className="mt-2 flex flex-col gap-4">
+                {project.screenshots.map((s) => (
+                  <figure key={s.src}>
+                    <img
+                      src={s.src}
+                      alt={s.alt}
+                      loading="lazy"
+                      className="block w-full rounded-[var(--radius-sm)] border border-line-faint bg-surface-0"
+                    />
+                    {s.caption ? (
+                      <figcaption className="mt-1.5 text-text-faint"># {s.caption}</figcaption>
+                    ) : null}
+                  </figure>
+                ))}
+              </div>
+            </>
+          ) : null}
 
           <div className="mt-5">
             <Prompt slug={slug} cmd="cat stack" />

@@ -16,6 +16,14 @@ export interface ProjectLink {
   todo?: boolean;
 }
 
+/** A real product screenshot, served from /public/projects. */
+export interface Screenshot {
+  src: string;
+  alt: string;
+  /** Short caption shown under the image in the expanded terminal view. */
+  caption?: string;
+}
+
 export interface Project {
   id: string;
   title: string;
@@ -30,6 +38,8 @@ export interface Project {
   metrics: Metric[];
   /** "How it works" highlights for the showcase panel. */
   features: { title: string; body: string }[];
+  /** Real app screenshots; the first one fronts the showcase card. */
+  screenshots?: Screenshot[];
   links: ProjectLink[];
   featured: boolean;
 }
