@@ -140,11 +140,11 @@ export const projects: Project[] = [
     title: "Autopsy",
     tagline:
       "Forensic memory for AI coding agents. A blackbox recorder that turns every failure into a guardrail, so the next run doesn't make the same mistake.",
-    badge: "3rd overall · LA Hacks 2026",
-    status: "3rd overall + Cognition Challenge @ LA Hacks 2026",
+    badge: "2nd overall · LA Hacks 2026",
+    status: "2nd overall + Cognition Challenge @ LA Hacks 2026",
     stack: ["Python", "FastAPI", "Postgres", "pgvector", "Next.js", "opencode"],
     metrics: [
-      { label: "Placement", value: "3rd overall" },
+      { label: "Placement", value: "2nd overall" },
       { label: "Preflight", value: "ANN + 3-hop graph" },
       { label: "Install", value: "one command" },
     ],
@@ -159,7 +159,7 @@ export const projects: Project[] = [
       },
       {
         title: "One command, zero config",
-        body: "curl | bash brings up the whole stack: Postgres, the FastAPI service, and a Next.js dashboard for exploring the failure graph. Won 3rd overall and the Cognition Company Challenge at LA Hacks 2026.",
+        body: "curl | bash brings up the whole stack: Postgres, the FastAPI service, and a Next.js dashboard for exploring the failure graph. Won 2nd overall and the Cognition Company Challenge at LA Hacks 2026.",
       },
     ],
     screenshots: [
