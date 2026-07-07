@@ -12,7 +12,7 @@ export const projects: Project[] = [
       "Live video in, live soundtrack out. Gemini watches a stream and composes music for it in real time, streamed to everyone in the room.",
     badge: "Google Gemini Developer Spotlight",
     status: "Gemini Developer Spotlight",
-    stack: ["Python", "FastAPI", "React", "WebSockets", "Gemini", "Lyria", "Multimodal LLM"],
+    stack: ["Next.js", "FastAPI", "Python", "WebSockets", "Gemini", "Lyria RealTime"],
     metrics: [
       { label: "End-to-end latency", value: "<400ms" },
       { label: "Latency cut", value: "−50%" },
@@ -28,8 +28,8 @@ export const projects: Project[] = [
         body: "Viewers join live streams through a Discover/Trending/Library UI; generated audio arrives as WebSocket chunks kept in lock-step with the video, sub-400ms end to end — half the latency I started with.",
       },
       {
-        title: "Shipped, then spotlighted",
-        body: "Built with a team at an MLH hackathon, demoed live, and selected for the Google Gemini Developer Spotlight.",
+        title: "Won, then spotlighted",
+        body: "Won MLH's Best Use of Gemini API at HackTX 2025, then selected for the Google Gemini Developer Spotlight. Bonus mode: an ambient piano scored by live NOAA space-weather data.",
       },
     ],
     screenshots: [
@@ -44,7 +44,10 @@ export const projects: Project[] = [
         caption: "demoing live at the hackathon (MLH)",
       },
     ],
-    links: [{ label: "GitHub", href: "#", todo: true }],
+    links: [
+      { label: "GitHub", href: "https://github.com/emw8105/hacktx-25" },
+      { label: "Devpost", href: "https://devpost.com/software/minions-6-7" },
+    ],
     featured: true,
   },
   {
@@ -129,6 +132,97 @@ export const projects: Project[] = [
     links: [
       { label: "Live demo", href: "https://lyria-studio-web.vercel.app/" },
       { label: "GitHub", href: "https://github.com/AlanRoybal/lyria-studio" },
+    ],
+    featured: true,
+  },
+  {
+    id: "autopsy",
+    title: "Autopsy",
+    tagline:
+      "Forensic memory for AI coding agents. A blackbox recorder that turns every failure into a guardrail, so the next run doesn't make the same mistake.",
+    badge: "3rd overall · LA Hacks 2026",
+    status: "3rd overall + Cognition Challenge @ LA Hacks 2026",
+    stack: ["Python", "FastAPI", "Postgres", "pgvector", "Next.js", "opencode"],
+    metrics: [
+      { label: "Placement", value: "3rd overall" },
+      { label: "Preflight", value: "ANN + 3-hop graph" },
+      { label: "Install", value: "one command" },
+    ],
+    features: [
+      {
+        title: "Record every failure",
+        body: "A plugin wraps the opencode runtime and records every tool call, edit, rejection and postflight check, classifying failures into a graph in Postgres + pgvector.",
+      },
+      {
+        title: "Warn before it happens again",
+        body: "Before a new task runs, its text is embedded and matched against the failure graph — ANN search plus a 3-hop traversal — injecting a system addendum and, when warranted, hard-blocking tool calls.",
+      },
+      {
+        title: "One command, zero config",
+        body: "curl | bash brings up the whole stack: Postgres, the FastAPI service, and a Next.js dashboard for exploring the failure graph. Won 3rd overall and the Cognition Company Challenge at LA Hacks 2026.",
+      },
+    ],
+    screenshots: [
+      {
+        src: "/projects/autopsy-graph.jpg",
+        alt: "Autopsy's dashboard showing the failure graph: classified failure nodes connected by edges, with filters",
+        caption: "the failure graph — every recorded mistake, classified and connected",
+      },
+      {
+        src: "/projects/autopsy-timeline.jpg",
+        alt: "Autopsy's timeline view comparing agent runs side by side",
+        caption: "run timelines, side by side",
+      },
+    ],
+    links: [
+      { label: "Site", href: "https://autopsy.surf" },
+      { label: "GitHub", href: "https://github.com/balebbae/autopsy" },
+      { label: "Devpost", href: "https://devpost.com/software/autopsy-zq5d84" },
+    ],
+    featured: true,
+  },
+  {
+    id: "vibecloud",
+    title: "VibeCloud",
+    tagline:
+      "Sketch an AWS architecture on a shared whiteboard, vote, and Claude redraws it as a typed infra graph — vote again and it deploys.",
+    badge: "Best Use of AWS · Hook 'Em Hacks",
+    status: "Best Use of AWS @ Hook 'Em Hacks",
+    stack: ["React", "Vite", "Fastify", "Hocuspocus", "Claude", "AWS CDK", "LocalStack"],
+    metrics: [
+      { label: "Award", value: "Best Use of AWS" },
+      { label: "Sketch → graph", value: "Claude vision" },
+      { label: "Deploy", value: "CDK, one vote" },
+    ],
+    features: [
+      {
+        title: "Whiteboard first, types later",
+        body: "Phase 1 is a freeform collaborative whiteboard. When 80% of the room votes, Claude vision reconstructs the sketch into a typed node graph of real AWS resources.",
+      },
+      {
+        title: "An agent in the room",
+        body: "Phase 2 pairs the graph with a shared chat where the agent critiques the architecture and edits the graph directly via tool-use, live in front of everyone.",
+      },
+      {
+        title: "Vote to ship",
+        body: "A second 80% vote compiles the graph with AWS CDK and deploys it to LocalStack. Won Best Use of AWS at Hook 'Em Hacks (UT Austin).",
+      },
+    ],
+    screenshots: [
+      {
+        src: "/projects/vibecloud-graph.jpg",
+        alt: "VibeCloud Phase 2: a typed AWS architecture node graph beside the architect agent chat",
+        caption: "the sketch, reconstructed as a typed AWS graph — agent chat alongside",
+      },
+      {
+        src: "/projects/vibecloud-landing.jpg",
+        alt: "VibeCloud landing page: design cloud systems together",
+        caption: "design cloud systems together",
+      },
+    ],
+    links: [
+      { label: "GitHub", href: "https://github.com/anishalle/hookemhacks26" },
+      { label: "Devpost", href: "https://devpost.com/software/vibe-cloud" },
     ],
     featured: true,
   },

@@ -207,7 +207,7 @@ function TerminalLightbox({
           </button>
         </div>
         <div
-          className="overflow-y-auto p-6 leading-relaxed"
+          className="min-h-0 flex-1 overflow-y-auto p-6 leading-relaxed"
           style={{
             backgroundImage: `radial-gradient(120% 120% at 100% 0%, rgba(${tint},0.10), transparent 60%)`,
           }}
